@@ -21,7 +21,6 @@ self.addEventListener('fetch', event => {
         }
         return fetch(event.request)
           .then(networkResponse => {
-            // If we get a valid response, clone and cache it
             if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
               const responseToCache = networkResponse.clone();
               caches.open(CACHE_NAME).then(cache => {
@@ -31,7 +30,6 @@ self.addEventListener('fetch', event => {
             return networkResponse;
           })
           .catch(() => {
-            // Fallback offline response
             return new Response('You are offline', { status: 503 });
           });
       })
