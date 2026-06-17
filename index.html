@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#2D1B4E" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>EaseSave</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js">
+  </script>
+
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+  <style>
+    /* ---------------------- RESET & BASE ---------------------- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #F9F6F0;
+      color: #1e1a1a;
+      padding-bottom: 80px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .mono {
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+    }
+    :root {
+      --plum: #2D1B4E;
+      --plum-light: #4a2c7a;
+      --amber: #F5A623;
+      --amber-light: #f8c36a;
+      --surface: #F9F6F0;
+      --sage: #7BAE8A;
+      --sage-dark: #5a8d6a;
+      --soft-red: #E05C5C;
+      --soft-red-light: #f5baba;
+      --text-dark: #1e1a1a;
+      --text-muted: #6b5f5a;
+      --shadow: 0 4px 12px rgba(45, 27, 78, 0.12);
+      --radius: 16px;
+    }
+
+    /* ===================== SCREENS ===================== */
+    .screen {
+      display: none;
+      flex: 1;
+      padding: 16px 16px 24px;
+      animation: fadeIn 0.25s ease;
+    }
+    .screen.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ===================== BOTTOM NAV ===================== */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 8px 0 12px;
+      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+      border-top: 1px solid rgba(45, 27, 78, 0.08);
+      z-index: 100;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      padding: 4px 12px;
+      cursor: pointer;
+      transition: 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .nav-item i {
+      font-size: 22px;
+      margin-bottom: 2px;
+    }
+    .nav-item.active {
+      color: var(--plum);
+      font-weight: 600;
+    }
+    .nav-item.active i {
+      color: var(--plum);
+    }
+
+    /* ===================== FAB ===================== */
+    .fab {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--amber);
+      color: white;
+      border: none;
+      box-shadow: 0 6px 20px rgba(245, 166, 35, 0.4);
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: 0.2s;
+      z-index: 99;
+    }
+    .fab:hover {
+      transform: scale(1.05);
+      background: #d98e1c;
+    }
+
+    /* ===================== CARDS & COMPONENTS ===================== */
+    .card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 18px 16px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .card-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      letter-spacing: 0.3px;
+    }
+    .amount {
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+      font-size: 20px;
+    }
+    .amount-large {
+      font-size: 28px;
+    }
+    .badge {
+      display: inline-block;
+      background: var(--plum);
+      color: white;
+      border-radius: 20px;
+      padding: 2px 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .progress-bar {
+      height: 8px;
+      background: #e9e3dc;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 10px;
+      background: var(--sage);
+      transition: width 0.4s ease;
+    }
+    .progress-fill.amber {
+      background: var(--amber);
+    }
+    .progress-fill.red {
+      background: var(--soft-red);
+    }
+
+    /* Cash Pulse dial */
+    #pulseCanvas {
+      display: block;
+      margin: 0 auto;
+      width: 140px;
+      height: 140px;
+    }
+    .dial-label {
+      text-align: center;
+      margin-top: -10px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .dial-value {
+      font-family: 'DM Mono', monospace;
+      font-size: 22px;
+      font-weight: 500;
+    }
+
+    /* Category chips */
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 12px 0;
+    }
+    .category-chip {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 4px;
+      border-radius: 12px;
+      background: #f3efe8;
+      border: 2px solid transparent;
+      transition: 0.15s;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text-dark);
+    }
+    .category-chip i {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+    .category-chip.selected {
+      border-color: var(--plum);
+      background: #ede8f5;
+    }
+    .category-chip.expense {
+      /* expense categories */;
+    }
+    .category-chip.income {
+      background: #e6f0e8;
+    }
+
+    /* Transaction list */
+    .tx-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0ebe5;
+    }
+    .tx-item:last-child {
+      border-bottom: none;
+    }
+    .tx-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #f3efe8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      color: var(--plum);
+    }
+    .tx-info {
+      flex: 1;
+    }
+    .tx-info .tx-note {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .tx-info .tx-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .tx-amount {
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+    }
+    .tx-amount.income {
+      color: var(--sage);
+    }
+    .tx-amount.expense {
+      color: var(--soft-red);
+    }
+
+    /* Number pad */
+    .num-pad {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .num-pad button {
+      padding: 14px 0;
+      font-size: 22px;
+      font-family: 'DM Mono', monospace;
+      background: #f3efe8;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+    .num-pad button:active {
+      background: #d9d1c6;
+    }
+    .num-pad .clear-btn {
+      background: #f3e1dd;
+      color: var(--soft-red);
+    }
+    .num-pad .submit-btn {
+      background: var(--plum);
+      color: white;
+      font-size: 16px;
+    }
+
+    /* Report table */
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    .report-table th {
+      text-align: left;
+      color: var(--text-muted);
+      font-weight: 500;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #e9e3dc;
+    }
+    .report-table td {
+      padding: 8px 0;
+      border-bottom: 1px solid #f3efe8;
+    }
+    .report-table .variance-positive {
+      color: var(--sage);
+    }
+    .report-table .variance-negative {
+      color: var(--soft-red);
+    }
+
+    /* Savings history */
+    .savings-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0ebe5;
+      font-size: 14px;
+    }
+    .savings-item .dir-deposit {
+      color: var(--sage);
+    }
+    .savings-item .dir-withdrawal {
+      color: var(--soft-red);
+    }
+
+    /* Alerts */
+    .alert-banner {
+      background: #fdf2e9;
+      border-left: 4px solid var(--amber);
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+    .alert-banner.danger {
+      background: #fce9e9;
+      border-left-color: var(--soft-red);
+    }
+    .alert-banner.success {
+      background: #e8f3eb;
+      border-left-color: var(--sage);
+    }
+
+    /* Utility */
+    .flex-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .mt-8 {
+      margin-top: 8px;
+    }
+    .mb-8 {
+      margin-bottom: 8px;
+    }
+    .text-muted {
+      color: var(--text-muted);
+    }
+    .text-center {
+      text-align: center;
+    }
+    .w-full {
+      width: 100%;
+    }
+    .btn-primary {
+      background: var(--plum);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 30px;
+      font-weight: 600;
+      font-size: 16px;
+      width: 100%;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-primary:active {
+      opacity: 0.8;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--plum);
+      color: var(--plum);
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-weight: 600;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    /* ===================== DARK LOGIN PAGE ===================== */
+    #authScreen {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 32px 24px;
+      background: radial-gradient(circle at 30% 10%, #1a1029, #0b0712 90%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Animated background glow */
+    #authScreen::before {
+      content: '';
+      position: absolute;
+      top: -20%;
+      left: -20%;
+      width: 140%;
+      height: 140%;
+      background: radial-gradient(circle at 70% 30%, rgba(245, 166, 35, 0.08) 0%, transparent 60%);
+      animation: pulseGlow 8s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+    @keyframes pulseGlow {
+      0% {
+        opacity: 0.3;
+        transform: scale(1);
+      }
+      100% {
+        opacity: 0.8;
+        transform: scale(1.1);
+      }
+    }
+
+    #authScreen .logo {
+      font-size: 32px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+      text-shadow: 0 0 20px rgba(245, 166, 35, 0.3);
+      position: relative;
+      z-index: 2;
+    }
+    #authScreen .sub {
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 32px;
+      font-weight: 400;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Glassmorphism card */
+    .auth-card {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border-radius: 24px;
+      padding: 28px 24px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      position: relative;
+      z-index: 2;
+    }
+
+    .auth-input {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      font-size: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      margin-bottom: 16px;
+      transition: 0.3s;
+      outline: none;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .auth-input::placeholder {
+      color: rgba(255, 255, 255, 0.35);
+    }
+    .auth-input:focus {
+      border-color: var(--amber);
+      box-shadow: 0 0 20px rgba(245, 166, 35, 0.15);
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .auth-input:-webkit-autofill {
+      -webkit-box-shadow: 0 0 0 30px #1a1029 inset !important;
+      -webkit-text-fill-color: #fff !important;
+    }
+
+    .btn-primary.auth-btn {
+      background: linear-gradient(135deg, var(--amber), #d98e1c);
+      color: #1a1029;
+      font-weight: 700;
+      border: none;
+      padding: 14px 20px;
+      border-radius: 30px;
+      font-size: 16px;
+      width: 100%;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 8px 24px rgba(245, 166, 35, 0.25);
+      letter-spacing: 0.3px;
+    }
+    .btn-primary.auth-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(245, 166, 35, 0.4);
+    }
+    .btn-primary.auth-btn:active {
+      transform: scale(0.97);
+    }
+
+    .auth-toggle {
+      text-align: center;
+      margin-top: 20px;
+      color: rgba(255, 255, 255, 0.6);
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 14px;
+      position: relative;
+      z-index: 2;
+    }
+    .auth-toggle:hover {
+      color: #fff;
+    }
+
+    #authError {
+      margin-bottom: 16px;
+      background: rgba(224, 92, 92, 0.15);
+      border-left-color: var(--soft-red);
+      color: #ffb3b3;
+      backdrop-filter: blur(4px);
+    }
+
+    .auth-footer-note {
+      margin-top: 24px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.3);
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Floating particles (decorative) */
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: var(--amber);
+      opacity: 0.08;
+      pointer-events: none;
+      animation: floatParticle 12s infinite alternate ease-in-out;
+      z-index: 1;
+    }
+    .particle:nth-child(1) {
+      width: 80px;
+      height: 80px;
+      top: 10%;
+      left: 5%;
+      animation-duration: 14s;
+    }
+    .particle:nth-child(2) {
+      width: 120px;
+      height: 120px;
+      bottom: 10%;
+      right: 5%;
+      animation-duration: 18s;
+      background: #7BAE8A;
+      opacity: 0.06;
+    }
+    .particle:nth-child(3) {
+      width: 60px;
+      height: 60px;
+      top: 40%;
+      right: 15%;
+      animation-duration: 10s;
+      background: #E05C5C;
+      opacity: 0.05;
+    }
+    @keyframes floatParticle {
+      0% {
+        transform: translate(0, 0) scale(1);
+      }
+      100% {
+        transform: translate(30px, -30px) scale(1.2);
+      }
+    }
+
+    /* ===================== RESPONSIVE ===================== */
+    @media (min-width: 480px) {
+      body {
+        max-width: 480px;
+        margin: 0 auto;
+        border-left: 1px solid #e9e3dc;
+        border-right: 1px solid #e9e3dc;
+      }
+      #authScreen {
+        max-width: 480px;
+        margin: 0 auto;
+      }
+    }
+
+    #appShell {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== AUTH SCREEN ==================== -->
+  <div id="authScreen">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+
+    <div class="logo">💰 EaseSave</div>
+    <div class="sub">Track every shilling, master your money.</div>
+
+    <div class="auth-card">
+      <div id="authError" class="alert-banner danger" style="display:none;"></div>
+
+      <input type="email" id="authEmail" class="auth-input" placeholder="Email" />
+      <input type="password" id="authPassword" class="auth-input" placeholder="Password" />
+
+      <button id="authButton" class="btn-primary auth-btn">Sign In</button>
+      <div class="auth-toggle" id="authToggle">Don't have an account? Sign Up</div>
+    </div>
+
+    <div class="auth-footer-note">Demo: any email/password (Supabase Auth)</div>
+  </div>
+
+  <!-- ==================== APP SHELL ==================== -->
+  <div id="appShell">
+
+    <!-- SCREEN: Dashboard -->
+    <div id="screen-dashboard" class="screen active">
+      <div id="alertContainer"></div>
+
+      <!-- Cash Pulse Dial -->
+      <div class="card" style="text-align:center;">
+        <div style="position:relative; display:inline-block;">
+          <canvas id="pulseCanvas" width="140" height="140"></canvas>
+          <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-family:'DM Mono',monospace; font-size:24px; font-weight:500;">
+            <span id="dialPercent">0%</span>
+          </div>
+        </div>
+        <div class="dial-label">
+          <span class="dial-value" id="remainingBudget">0</span> UGX left this month
+        </div>
+        <div class="text-muted" style="font-size:13px; margin-top:4px;">
+          <span id="daysLeft">0</span> days left · burn rate: <span id="burnRate">0</span> UGX/day
+        </div>
+      </div>
+
+      <!-- Sanlam + Emergency -->
+      <div class="card">
+        <div class="flex-row">
+          <span><strong>🏦 Sanlam</strong></span>
+          <span class="amount" id="sanlamBalance">0</span>
+        </div>
+        <div class="flex-row text-muted" style="font-size:13px;">
+          <span>This month saved: <span id="monthlySaved" class="amount">0</span></span>
+          <span>Goal: 25,000</span>
+        </div>
+        <div class="progress-bar" style="margin-top:4px;">
+          <div class="progress-fill" id="sanlamProgress" style="width:0%;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="flex-row">
+          <span><strong>🛡️ Emergency Buffer</strong></span>
+          <span class="amount" id="emergencyBalance">0</span>
+        </div>
+        <div class="flex-row text-muted" style="font-size:13px;">
+          <span>Goal: 100,000 UGX</span>
+          <span id="emergencyPercent">0%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill amber" id="emergencyProgress" style="width:0%;"></div>
+        </div>
+      </div>
+
+      <!-- Category spend bars -->
+      <div class="card">
+        <div class="card-title">Spending by Category</div>
+        <div id="categoryBars"></div>
+      </div>
+
+      <!-- Last 3 transactions -->
+      <div class="card">
+        <div class="card-title">Recent Transactions</div>
+        <div id="recentTxs"></div>
+      </div>
+    </div>
+
+    <!-- SCREEN: Log Transaction -->
+    <div id="screen-log" class="screen">
+      <h2 style="font-weight:600; margin-bottom:16px;">Log Transaction</h2>
+
+      <div class="card">
+        <div class="card-title">Amount (UGX)</div>
+        <input type="text" id="amountInput" class="auth-input" placeholder="0" style="font-size:24px; font-family:'DM Mono',monospace; text-align:center; background:white; color:#1e1a1a;" readonly />
+        <div class="num-pad" id="numPad">
+          <button data-value="1">1</button>
+          <button data-value="2">2</button>
+          <button data-value="3">3</button>
+          <button data-value="4">4</button>
+          <button data-value="5">5</button>
+          <button data-value="6">6</button>
+          <button data-value="7">7</button>
+          <button data-value="8">8</button>
+          <button data-value="9">9</button>
+          <button data-value="clear" class="clear-btn">⌫</button>
+          <button data-value="0">0</button>
+          <button data-value="clear-all" class="clear-btn">C</button>
+          <button data-value="submit" class="submit-btn">✓</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Category</div>
+        <div class="category-grid" id="categoryGrid">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Account</div>
+        <select id="accountSelect" class="auth-input" style="width:100%; background:white; color:#1e1a1a;">
+          <option value="cash">Cash on Hand</option>
+          <option value="momo">MTN MoMo</option>
+          <option value="sanlam">Sanlam (savings)</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Note (optional)</div>
+        <input type="text" id="noteInput" class="auth-input" placeholder="e.g. Lunch at Nakasero" style="background:white; color:#1e1a1a;" />
+      </div>
+
+      <div class="card">
+        <div class="card-title">Date</div>
+        <input type="date" id="dateInput" class="auth-input" style="background:white; color:#1e1a1a;" />
+      </div>
+
+      <div id="logError" class="alert-banner danger" style="display:none;"></div>
+      <button id="submitTxBtn" class="btn-primary">Submit Transaction</button>
+    </div>
+
+    <!-- SCREEN: Transactions list -->
+    <div id="screen-transactions" class="screen">
+      <div class="flex-row">
+        <h2 style="font-weight:600;">Transactions</h2>
+        <div>
+          <span class="badge" id="txCount">0</span>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:8px; margin:12px 0; flex-wrap:wrap;">
+        <select id="filterCategory" class="auth-input" style="flex:1; padding:8px; background:white; color:#1e1a1a;">
+          <option value="all">All Categories</option>
+        </select>
+        <select id="filterMonth" class="auth-input" style="flex:1; padding:8px; background:white; color:#1e1a1a;">
+          <option value="all">All Months</option>
+        </select>
+      </div>
+
+      <div id="txList"></div>
+    </div>
+
+    <!-- SCREEN: Monthly Report -->
+    <div id="screen-report" class="screen">
+      <h2 style="font-weight:600;">Monthly Report</h2>
+      <div style="margin:12px 0;">
+        <input type="month" id="reportMonth" class="auth-input" style="width:auto; display:inline-block; background:white; color:#1e1a1a;" />
+        <button id="loadReportBtn" class="btn-primary" style="width:auto; padding:8px 20px; display:inline-block;">Load</button>
+      </div>
+
+      <div id="reportSummary" class="card">
+        <div class="flex-row"><span>Income</span><span class="amount" id="reportIncome">0</span></div>
+        <div class="flex-row"><span>Expenses</span><span class="amount" id="reportExpenses">0</span></div>
+        <div class="flex-row"><span>Savings (to Sanlam)</span><span class="amount" id="reportSavings">0</span></div>
+        <div class="flex-row"><span>Unaccounted</span><span class="amount" id="reportUnaccounted">0</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Category Breakdown</div>
+        <table class="report-table">
+          <thead><tr><th>Category</th><th>Budget</th><th>Actual</th><th>Variance</th></tr></thead>
+          <tbody id="reportCategoryBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SCREEN: Savings -->
+    <div id="screen-savings" class="screen">
+      <h2 style="font-weight:600;">Savings</h2>
+
+      <div class="card">
+        <div class="flex-row">
+          <span><strong>🏦 Sanlam Balance</strong></span>
+          <span class="amount" id="savingsSanlamBalance">0</span>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <input type="number" id="savingsAmount" class="auth-input" placeholder="Amount" style="flex:2; background:white; color:#1e1a1a;" />
+          <select id="savingsDirection" class="auth-input" style="flex:1; background:white; color:#1e1a1a;">
+            <option value="deposit">Deposit</option>
+            <option value="withdrawal">Withdraw</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <select id="savingsReason" class="auth-input" style="flex:2; background:white; color:#1e1a1a;">
+            <option value="regular">Regular</option>
+            <option value="emergency">Emergency</option>
+            <option value="discretionary">Discretionary</option>
+          </select>
+          <button id="logSavingsBtn" class="btn-primary" style="flex:1; padding:8px;">Log</button>
+        </div>
+        <div id="savingsError" class="alert-banner danger" style="display:none;"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Emergency Buffer</div>
+        <div class="flex-row">
+          <span>Balance</span>
+          <span class="amount" id="savingsEmergencyBalance">0</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill amber" id="savingsEmergencyProgress" style="width:0%;"></div>
+        </div>
+        <div class="text-muted" style="font-size:13px;">Goal: 100,000 UGX</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Savings History</div>
+        <div id="savingsHistory"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Month-on-Month Growth</div>
+        <canvas id="savingsChart" width="300" height="120"></canvas>
+      </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-screen="dashboard"><i class="fas fa-home"></i><span>Home</span></button>
+      <button class="nav-item" data-screen="log"><i class="fas fa-plus-circle"></i><span>Log</span></button>
+      <button class="nav-item" data-screen="transactions"><i class="fas fa-list-ul"></i><span>Txns</span></button>
+      <button class="nav-item" data-screen="report"><i class="fas fa-chart-pie"></i><span>Report</span></button>
+      <button class="nav-item" data-screen="savings"><i class="fas fa-piggy-bank"></i><span>Savings</span></button>
+    </nav>
+
+    <!-- FAB -->
+    <button class="fab" id="fabLog"><i class="fas fa-pen"></i></button>
+  </div>
+
+  <!-- ==================== JAVASCRIPT ==================== -->
+  <script>
+    // -------------------- SUPABASE CONFIG --------------------
+    const SUPABASE_URL = 'https://your-project.supabase.co'; // <-- REPLACE
+    const SUPABASE_ANON_KEY = 'your-anon-key'; // <-- REPLACE
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // -------------------- STATE --------------------
+    let currentUser = null;
+    let allTransactions = [];
+    let allSavings = [];
+    let categoryLimits = {};
+    let currentMonth = new Date().toISOString().slice(0, 7);
+    let emergencyBalance = 0;
+    let sanlamBalance = 0;
+    let monthlyStipend = 300000;
+
+    // Categories
+    const CATEGORIES = [
+      { id: 'breakfast', label: 'Breakfast', icon: 'fa-egg', type: 'expense' },
+      { id: 'lunch', label: 'Lunch', icon: 'fa-utensils', type: 'expense' },
+      { id: 'supper', label: 'Supper', icon: 'fa-moon', type: 'expense' },
+      { id: 'social', label: 'Social / Sport', icon: 'fa-futbol', type: 'expense' },
+      { id: 'household', label: 'Household', icon: 'fa-soap', type: 'expense' },
+      { id: 'airtime', label: 'Airtime & Data', icon: 'fa-wifi', type: 'expense' },
+      { id: 'unaccounted', label: 'Unaccounted', icon: 'fa-question-circle', type: 'expense' },
+      { id: 'income_stipend', label: 'Stipend', icon: 'fa-hand-holding-usd', type: 'income' },
+      { id: 'income_government', label: 'Govt Fund', icon: 'fa-university', type: 'income' },
+      { id: 'income_family', label: 'Family Top-Up', icon: 'fa-users', type: 'income' },
+    ];
+
+    const EXPENSE_CATEGORIES = CATEGORIES.filter(c => c.type === 'expense');
+    const DEFAULT_BUDGETS = {
+      breakfast: 30000,
+      lunch: 40000,
+      supper: 40000,
+      social: 50000,
+      household: 20000,
+      airtime: 15000,
+      unaccounted: 10000,
+    };
+
+    // -------------------- DOM REFS --------------------
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
+
+    const authScreen = $('#authScreen');
+    const appShell = $('#appShell');
+    const authEmail = $('#authEmail');
+    const authPassword = $('#authPassword');
+    const authButton = $('#authButton');
+    const authToggle = $('#authToggle');
+    const authError = $('#authError');
+
+    const screens = {
+      dashboard: $('#screen-dashboard'),
+      log: $('#screen-log'),
+      transactions: $('#screen-transactions'),
+      report: $('#screen-report'),
+      savings: $('#screen-savings'),
+    };
+
+    const navItems = $$('.nav-item');
+    const fabLog = $('#fabLog');
+
+    // -------------------- AUTH --------------------
+    let isSignUp = false;
+
+    authToggle.addEventListener('click', () => {
+      isSignUp = !isSignUp;
+      authButton.textContent = isSignUp ? 'Sign Up' : 'Sign In';
+      authToggle.textContent = isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up";
+    });
+
+    authButton.addEventListener('click', async () => {
+      const email = authEmail.value.trim();
+      const password = authPassword.value.trim();
+      if (!email || !password) {
+        authError.textContent = 'Please fill in all fields.';
+        authError.style.display = 'block';
+        return;
+      }
+      authError.style.display = 'none';
+
+      let result;
+      if (isSignUp) {
+        result = await supabase.auth.signUp({ email, password });
+      } else {
+        result = await supabase.auth.signInWithPassword({ email, password });
+      }
+
+      if (result.error) {
+        authError.textContent = result.error.message;
+        authError.style.display = 'block';
+        return;
+      }
+
+      currentUser = result.data.user;
+      authScreen.style.display = 'none';
+      appShell.style.display = 'block';
+      initApp();
+    });
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        currentUser = data.session.user;
+        authScreen.style.display = 'none';
+        appShell.style.display = 'block';
+        initApp();
+      }
+    });
+
+    // -------------------- INIT APP --------------------
+    async function initApp() {
+      await loadData();
+      setupCategoryGrid();
+      setupNumPad();
+      setupDateInput();
+      setupNav();
+      setupFilters();
+      setupReport();
+      setupSavings();
+      updateDashboard();
+      updateTransactions();
+      updateReport();
+      updateSavingsUI();
+      checkAlerts();
+      registerServiceWorker();
+    }
+
+    // -------------------- DATA LOADING --------------------
+    async function loadData() {
+      try {
+        const { data: txs, error: txErr } = await supabase
+          .from('transactions')
+          .select('*')
+          .order('date', { ascending: false });
+        if (txErr) throw txErr;
+        allTransactions = txs || [];
+
+        const { data: savings, error: svErr } = await supabase
+          .from('savings_log')
+          .select('*')
+          .order('date', { ascending: false });
+        if (svErr) throw svErr;
+        allSavings = savings || [];
+
+        const { data: budgets, error: bErr } = await supabase
+          .from('budgets')
+          .select('*')
+          .eq('month', currentMonth);
+        if (bErr) throw bErr;
+        if (budgets && budgets.length) {
+          budgets.forEach(b => { categoryLimits[b.category] = b.monthly_limit; });
+        } else {
+          categoryLimits = { ...DEFAULT_BUDGETS };
+        }
+
+        computeBalances();
+
+        const { data: profile, error: pErr } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single();
+        if (!pErr && profile) {
+          monthlyStipend = profile.monthly_stipend || 300000;
+          const emg = localStorage.getItem('emergencyBalance');
+          if (emg) emergencyBalance = parseFloat(emg);
+        }
+      } catch (e) {
+        console.warn('Supabase offline, using localStorage fallback', e);
+        const localTxs = localStorage.getItem('easesave_txs');
+        allTransactions = localTxs ? JSON.parse(localTxs) : [];
+        const localSavings = localStorage.getItem('easesave_savings');
+        allSavings = localSavings ? JSON.parse(localSavings) : [];
+        categoryLimits = { ...DEFAULT_BUDGETS };
+        computeBalances();
+        const emg = localStorage.getItem('emergencyBalance');
+        emergencyBalance = emg ? parseFloat(emg) : 0;
+      }
+    }
+
+    function computeBalances() {
+      let balance = 0;
+      allSavings.forEach(s => {
+        if (s.direction === 'deposit') balance += s.amount;
+        else balance -= s.amount;
+      });
+      sanlamBalance = balance;
+    }
+
+    function saveLocalData() {
+      localStorage.setItem('easesave_txs', JSON.stringify(allTransactions));
+      localStorage.setItem('easesave_savings', JSON.stringify(allSavings));
+      localStorage.setItem('emergencyBalance', emergencyBalance.toString());
+    }
+
+    // -------------------- UI HELPERS --------------------
+    function formatMoney(amount) {
+      return Math.round(amount).toLocaleString('en-UG');
+    }
+
+    function getCategoryIcon(id) {
+      const cat = CATEGORIES.find(c => c.id === id);
+      return cat ? cat.icon : 'fa-circle';
+    }
+
+    function getCategoryLabel(id) {
+      const cat = CATEGORIES.find(c => c.id === id);
+      return cat ? cat.label : id;
+    }
+
+    // -------------------- DASHBOARD --------------------
+    function updateDashboard() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const dayOfMonth = now.getDate();
+      const daysLeft = daysInMonth - dayOfMonth;
+
+      const monthStr = now.toISOString().slice(0, 7);
+      const monthTxs = allTransactions.filter(t => t.date && t.date.startsWith(monthStr));
+      const totalExpenses = monthTxs.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+      const budget = 300000;
+      const remaining = Math.max(0, budget - totalExpenses);
+      const percent = Math.min(100, (totalExpenses / budget) * 100);
+
+      const canvas = $('#pulseCanvas');
+      const ctx = canvas.getContext('2d');
+      const w = 140,
+        h = 140;
+      ctx.clearRect(0, 0, w, h);
+      const cx = w / 2,
+        cy = h / 2,
+        r = 56,
+        lineWidth = 12;
+      const startAngle = -Math.PI / 2;
+      const endAngle = startAngle + (percent / 100) * 2 * Math.PI;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+      ctx.strokeStyle = '#e9e3dc';
+      ctx.lineWidth = lineWidth;
+      ctx.stroke();
+      const color = percent < 70 ? '#7BAE8A' : (percent < 90 ? '#F5A623' : '#E05C5C');
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, startAngle, Math.min(endAngle, startAngle + 2 * Math.PI));
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      $('#dialPercent').textContent = Math.round(percent) + '%';
+      $('#remainingBudget').textContent = formatMoney(remaining);
+      $('#daysLeft').textContent = daysLeft;
+      const burnRate = daysLeft > 0 ? Math.round(remaining / daysLeft) : 0;
+      $('#burnRate').textContent = formatMoney(burnRate);
+
+      const monthSavings = allSavings.filter(s => s.date && s.date.startsWith(monthStr) && s.direction === 'deposit')
+        .reduce((sum, s) => sum + s.amount, 0);
+      $('#sanlamBalance').textContent = formatMoney(sanlamBalance);
+      $('#monthlySaved').textContent = formatMoney(monthSavings);
+      const savePercent = Math.min(100, (monthSavings / 25000) * 100);
+      $('#sanlamProgress').style.width = savePercent + '%';
+
+      const emgGoal = 100000;
+      const emgPercent = Math.min(100, (emergencyBalance / emgGoal) * 100);
+      $('#emergencyBalance').textContent = formatMoney(emergencyBalance);
+      $('#emergencyPercent').textContent = Math.round(emgPercent) + '%';
+      $('#emergencyProgress').style.width = emgPercent + '%';
+
+      const container = $('#categoryBars');
+      container.innerHTML = '';
+      EXPENSE_CATEGORIES.forEach(cat => {
+        const spent = monthTxs.filter(t => t.category === cat.id && t.type === 'expense')
+          .reduce((sum, t) => sum + t.amount, 0);
+        const limit = categoryLimits[cat.id] || 0;
+        const pct = limit > 0 ? Math.min(100, (spent / limit) * 100) : 0;
+        const color = pct < 80 ? '#7BAE8A' : (pct < 100 ? '#F5A623' : '#E05C5C');
+        container.innerHTML += `
+            <div style="margin-bottom:6px;">
+              <div class="flex-row">
+                <span style="font-size:13px;">${cat.label}</span>
+                <span style="font-size:13px;">${formatMoney(spent)} / ${formatMoney(limit)}</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:${pct}%; background:${color};"></div></div>
+            </div>
+          `;
+      });
+
+      const recent = allTransactions.slice(0, 3);
+      const recentContainer = $('#recentTxs');
+      recentContainer.innerHTML = '';
+      if (recent.length === 0) {
+        recentContainer.innerHTML = '<div class="text-muted" style="padding:12px 0;">No transactions yet.</div>';
+      } else {
+        recent.forEach(tx => {
+          const isExpense = tx.type === 'expense';
+          const icon = getCategoryIcon(tx.category);
+          const label = getCategoryLabel(tx.category);
+          recentContainer.innerHTML += `
+              <div class="tx-item">
+                <div class="tx-icon"><i class="fas ${icon}"></i></div>
+                <div class="tx-info">
+                  <div class="tx-note">${tx.note || label}</div>
+                  <div class="tx-meta">${tx.date ? tx.date.slice(0,10) : ''} · ${label}</div>
+                </div>
+                <div class="tx-amount ${isExpense ? 'expense' : 'income'}">${isExpense ? '-' : '+'}${formatMoney(tx.amount)}</div>
+              </div>
+            `;
+        });
+      }
+
+      checkAlerts();
+    }
+
+    // -------------------- LOG TRANSACTION --------------------
+    let selectedCategory = null;
+    let amountString = '';
+
+    function setupCategoryGrid() {
+      const grid = $('#categoryGrid');
+      grid.innerHTML = '';
+      CATEGORIES.forEach(cat => {
+        const div = document.createElement('div');
+        div.className = `category-chip ${cat.type}`;
+        div.dataset.id = cat.id;
+        div.innerHTML = `<i class="fas ${cat.icon}"></i><span>${cat.label}</span>`;
+        div.addEventListener('click', () => {
+          document.querySelectorAll('.category-chip').forEach(el => el.classList.remove('selected'));
+          div.classList.add('selected');
+          selectedCategory = cat.id;
+        });
+        grid.appendChild(div);
+      });
+      const firstExpense = grid.querySelector('.category-chip.expense');
+      if (firstExpense) {
+        firstExpense.classList.add('selected');
+        selectedCategory = firstExpense.dataset.id;
+      }
+    }
+
+    function setupNumPad() {
+      const pad = $('#numPad');
+      pad.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        const val = btn.dataset.value;
+        const input = $('#amountInput');
+        if (val === 'clear') {
+          amountString = amountString.slice(0, -1);
+        } else if (val === 'clear-all') {
+          amountString = '';
+        } else if (val === 'submit') {
+          submitTransaction();
+          return;
+        } else {
+          amountString += val;
+        }
+        input.value = amountString ? formatMoney(parseFloat(amountString)) : '';
+      });
+    }
+
+    function setupDateInput() {
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0, 10);
+      $('#dateInput').value = dateStr;
+    }
+
+    async function submitTransaction() {
+      const amount = parseFloat(amountString);
+      if (!amount || amount <= 0) {
+        showLogError('Please enter a valid amount.');
+        return;
+      }
+      if (!selectedCategory) {
+        showLogError('Please select a category.');
+        return;
+      }
+
+      const account = $('#accountSelect').value;
+      const note = $('#noteInput').value.trim() || getCategoryLabel(selectedCategory);
+      const date = $('#dateInput').value || new Date().toISOString().slice(0, 10);
+
+      const cat = CATEGORIES.find(c => c.id === selectedCategory);
+      const type = cat ? cat.type : 'expense';
+
+      if (type === 'income') {
+        if (selectedCategory === 'income_stipend') {
+          const confirmSave = confirm(
+            'Stipend income detected. You must save 25,000 UGX to Sanlam. Continue?');
+          if (!confirmSave) return;
+          await logSavings(25000, 'deposit', 'regular', `Auto-save from stipend on ${date}`);
+          showAlert('Reminder: 25k saved to Sanlam ✅', 'success');
+        } else {
+          const saveFirst = confirm(
+            'Irregular income detected. Would you like to save a portion to Sanlam? (Recommended)');
+          if (saveFirst) {
+            const amountToSave = prompt('Enter amount to save (UGX):', '25000');
+            if (amountToSave && !isNaN(amountToSave) && parseFloat(amountToSave) > 0) {
+              await logSavings(parseFloat(amountToSave), 'deposit', 'regular',
+                `Savings from irregular income on ${date}`);
+              showAlert('Savings logged ✅', 'success');
+            }
+          }
+        }
+      }
+
+      const newTx = {
+        id: Date.now().toString(),
+        date: date,
+        amount: amount,
+        type: type,
+        category: selectedCategory,
+        account: account,
+        note: note,
+        created_at: new Date().toISOString(),
+      };
+
+      try {
+        const { error } = await supabase.from('transactions').insert(newTx);
+        if (error) throw error;
+      } catch (e) {
+        console.warn('Supabase insert failed, saving locally', e);
+        allTransactions.unshift(newTx);
+        saveLocalData();
+      }
+
+      allTransactions.unshift(newTx);
+      saveLocalData();
+
+      amountString = '';
+      $('#amountInput').value = '';
+      $('#noteInput').value = '';
+      selectedCategory = null;
+      document.querySelectorAll('.category-chip').forEach(el => el.classList.remove('selected'));
+      const firstExpense = document.querySelector('.category-chip.expense');
+      if (firstExpense) {
+        firstExpense.classList.add('selected');
+        selectedCategory = firstExpense.dataset.id;
+      }
+      showLogError('', false);
+      updateDashboard();
+      updateTransactions();
+      updateReport();
+      updateSavingsUI();
+      switchScreen('dashboard');
+    }
+
+    function showLogError(msg, show = true) {
+      const el = $('#logError');
+      if (show && msg) {
+        el.textContent = msg;
+        el.style.display = 'block';
+      } else {
+        el.style.display = 'none';
+      }
+    }
+
+    // -------------------- TRANSACTIONS LIST --------------------
+    function updateTransactions() {
+      const container = $('#txList');
+      const categoryFilter = $('#filterCategory').value;
+      const monthFilter = $('#filterMonth').value;
+
+      let filtered = allTransactions;
+      if (categoryFilter !== 'all') {
+        filtered = filtered.filter(t => t.category === categoryFilter);
+      }
+      if (monthFilter !== 'all') {
+        filtered = filtered.filter(t => t.date && t.date.startsWith(monthFilter));
+      }
+
+      $('#txCount').textContent = filtered.length;
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="text-muted" style="padding:20px 0; text-align:center;">No transactions found.</div>';
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(tx => {
+        const isExpense = tx.type === 'expense';
+        const icon = getCategoryIcon(tx.category);
+        const label = getCategoryLabel(tx.category);
+        html += `
+            <div class="tx-item">
+              <div class="tx-icon"><i class="fas ${icon}"></i></div>
+              <div class="tx-info">
+                <div class="tx-note">${tx.note || label}</div>
+                <div class="tx-meta">${tx.date ? tx.date.slice(0,10) : ''} · ${label} · ${tx.account || ''}</div>
+              </div>
+              <div class="tx-amount ${isExpense ? 'expense' : 'income'}">${isExpense ? '-' : '+'}${formatMoney(tx.amount)}</div>
+            </div>
+          `;
+      });
+      container.innerHTML = html;
+    }
+
+    function setupFilters() {
+      const categorySelect = $('#filterCategory');
+      categorySelect.innerHTML = '<option value="all">All Categories</option>';
+      CATEGORIES.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.textContent = cat.label;
+        categorySelect.appendChild(opt);
+      });
+      categorySelect.addEventListener('change', updateTransactions);
+
+      const monthSelect = $('#filterMonth');
+      monthSelect.innerHTML = '<option value="all">All Months</option>';
+      const months = new Set();
+      allTransactions.forEach(t => {
+        if (t.date) months.add(t.date.slice(0, 7));
+      });
+      [...months].sort().forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m;
+        const [year, month] = m.split('-');
+        const date = new Date(year, month - 1);
+        opt.textContent = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+        monthSelect.appendChild(opt);
+      });
+      monthSelect.addEventListener('change', updateTransactions);
+    }
+
+    // -------------------- REPORT --------------------
+    function setupReport() {
+      const reportMonth = $('#reportMonth');
+      reportMonth.value = currentMonth;
+      $('#loadReportBtn').addEventListener('click', updateReport);
+      updateReport();
+    }
+
+    function updateReport() {
+      const month = $('#reportMonth').value || currentMonth;
+      const monthTxs = allTransactions.filter(t => t.date && t.date.startsWith(month));
+
+      const totalIncome = monthTxs.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+      const totalExpenses = monthTxs.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+      const savings = allSavings.filter(s => s.date && s.date.startsWith(month) && s.direction === 'deposit')
+        .reduce((sum, s) => sum + s.amount, 0);
+      const unaccounted = monthTxs.filter(t => t.category === 'unaccounted' && t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      $('#reportIncome').textContent = formatMoney(totalIncome);
+      $('#reportExpenses').textContent = formatMoney(totalExpenses);
+      $('#reportSavings').textContent = formatMoney(savings);
+      $('#reportUnaccounted').textContent = formatMoney(unaccounted);
+
+      const tbody = $('#reportCategoryBody');
+      tbody.innerHTML = '';
+      EXPENSE_CATEGORIES.forEach(cat => {
+        const spent = monthTxs.filter(t => t.category === cat.id && t.type === 'expense')
+          .reduce((sum, t) => sum + t.amount, 0);
+        const budget = categoryLimits[cat.id] || 0;
+        const variance = budget - spent;
+        const varClass = variance >= 0 ? 'variance-positive' : 'variance-negative';
+        tbody.innerHTML += `
+            <tr>
+              <td>${cat.label}</td>
+              <td>${formatMoney(budget)}</td>
+              <td>${formatMoney(spent)}</td>
+              <td class="${varClass}">${formatMoney(variance)}</td>
+            </tr>
+          `;
+      });
+    }
+
+    // -------------------- SAVINGS --------------------
+    function setupSavings() {
+      $('#logSavingsBtn').addEventListener('click', async () => {
+        const amount = parseFloat($('#savingsAmount').value);
+        if (!amount || amount <= 0) {
+          showSavingsError('Enter a valid amount.');
+          return;
+        }
+        const direction = $('#savingsDirection').value;
+        const reason = $('#savingsReason').value;
+        await logSavings(amount, direction, reason, 'Manual log');
+        $('#savingsAmount').value = '';
+        updateSavingsUI();
+      });
+    }
+
+    async function logSavings(amount, direction, reason, note) {
+      const date = new Date().toISOString().slice(0, 10);
+      const newEntry = {
+        id: Date.now().toString(),
+        date: date,
+        amount: amount,
+        direction: direction,
+        reason: reason,
+        sanlam_balance_after: sanlamBalance + (direction === 'deposit' ? amount : -amount),
+        note: note || '',
+        created_at: new Date().toISOString(),
+      };
+
+      try {
+        const { error } = await supabase.from('savings_log').insert(newEntry);
+        if (error) throw error;
+      } catch (e) {
+        console.warn('Supabase savings insert failed', e);
+      }
+
+      allSavings.unshift(newEntry);
+      saveLocalData();
+      if (direction === 'deposit') sanlamBalance += amount;
+      else sanlamBalance -= amount;
+
+      updateSavingsUI();
+      updateDashboard();
+    }
+
+    function updateSavingsUI() {
+      $('#savingsSanlamBalance').textContent = formatMoney(sanlamBalance);
+      const emgGoal = 100000;
+      const emgPercent = Math.min(100, (emergencyBalance / emgGoal) * 100);
+      $('#savingsEmergencyBalance').textContent = formatMoney(emergencyBalance);
+      $('#savingsEmergencyProgress').style.width = emgPercent + '%';
+
+      const container = $('#savingsHistory');
+      container.innerHTML = '';
+      if (allSavings.length === 0) {
+        container.innerHTML = '<div class="text-muted">No savings logs.</div>';
+      } else {
+        allSavings.slice(0, 20).forEach(s => {
+          const dir = s.direction === 'deposit' ? '+' : '-';
+          const cls = s.direction === 'deposit' ? 'dir-deposit' : 'dir-withdrawal';
+          container.innerHTML += `
+              <div class="savings-item">
+                <span>${s.date ? s.date.slice(0,10) : ''} ${s.reason || ''} ${s.note ? '· '+s.note : ''}</span>
+                <span class="${cls}">${dir}${formatMoney(s.amount)}</span>
+              </div>
+            `;
+        });
+      }
+
+      drawSavingsChart();
+    }
+
+    function drawSavingsChart() {
+      const canvas = $('#savingsChart');
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width,
+        h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const monthlyNet = {};
+      allSavings.forEach(s => {
+        const month = s.date ? s.date.slice(0, 7) : '';
+        if (!month) return;
+        if (!monthlyNet[month]) monthlyNet[month] = 0;
+        monthlyNet[month] += (s.direction === 'deposit' ? s.amount : -s.amount);
+      });
+      const months = Object.keys(monthlyNet).sort();
+      if (months.length === 0) {
+        ctx.fillStyle = '#999';
+        ctx.font = '12px DM Sans';
+        ctx.fillText('No data yet', 10, 60);
+        return;
+      }
+      const values = months.map(m => monthlyNet[m]);
+      const maxVal = Math.max(0, ...values, 1000);
+      const barWidth = Math.min(40, (w - 20) / months.length - 4);
+      const startX = 10;
+
+      values.forEach((val, i) => {
+        const x = startX + i * (barWidth + 4);
+        const height = (val / maxVal) * (h - 20);
+        const y = h - 10 - height;
+        ctx.fillStyle = val >= 0 ? '#7BAE8A' : '#E05C5C';
+        ctx.fillRect(x, y, barWidth, height);
+        ctx.fillStyle = '#666';
+        ctx.font = '8px DM Sans';
+        const label = months[i].slice(5);
+        ctx.fillText(label, x, h - 2);
+      });
+    }
+
+    function showSavingsError(msg) {
+      const el = $('#savingsError');
+      el.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(() => el.style.display = 'none', 3000);
+    }
+
+    // -------------------- ALERTS --------------------
+    function checkAlerts() {
+      const container = $('#alertContainer');
+      container.innerHTML = '';
+      const now = new Date();
+      const monthStr = now.toISOString().slice(0, 7);
+      const monthTxs = allTransactions.filter(t => t.date && t.date.startsWith(monthStr));
+      const totalExpenses = monthTxs.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+      const budget = 300000;
+      const remaining = budget - totalExpenses;
+
+      const socialSpent = monthTxs.filter(t => t.category === 'social' && t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+      if (socialSpent >= 40000 && socialSpent < 50000) {
+        showAlert(`Social spending at ${formatMoney(socialSpent)} (80% of cap)`, 'warning');
+      }
+      if (socialSpent >= 50000) {
+        showAlert(`Social spending exceeded cap of 50,000!`, 'danger');
+      }
+
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const daysLeft = daysInMonth - now.getDate();
+      if (remaining < 50000 && daysLeft > 10) {
+        showAlert(`Cash on hand low (${formatMoney(remaining)}) with ${daysLeft} days left.`, 'danger');
+      }
+
+      if (now.getDate() === daysInMonth) {
+        const unaccounted = monthTxs.filter(t => t.category === 'unaccounted' && t.type === 'expense')
+          .reduce((sum, t) => sum + t.amount, 0);
+        if (unaccounted > 20000) {
+          showAlert(`Unaccounted expenses this month: ${formatMoney(unaccounted)}. Please review.`, 'danger');
+        }
+      }
+
+      const stipendIncome = monthTxs.filter(t => t.category === 'income_stipend').length;
+      const savingsThisMonth = allSavings.filter(s => s.date && s.date.startsWith(monthStr) && s.direction === 'deposit')
+        .length;
+      if (stipendIncome > 0 && savingsThisMonth === 0) {
+        showAlert('Stipend logged but no savings yet. Save 25k to Sanlam!', 'warning');
+      }
+
+      scheduleDailyNotification();
+    }
+
+    function showAlert(message, type = 'warning') {
+      const container = $('#alertContainer');
+      const div = document.createElement('div');
+      div.className = `alert-banner ${type === 'danger' ? 'danger' : (type === 'success' ? 'success' : '')}`;
+      div.textContent = message;
+      container.appendChild(div);
+    }
+
+    function scheduleDailyNotification() {
+      const now = new Date();
+      const target = new Date(now);
+      target.setHours(22, 0, 0, 0);
+      let delay = target - now;
+      if (delay < 0) delay += 24 * 60 * 60 * 1000;
+      setTimeout(() => {
+        if (Notification.permission === 'granted') {
+          new Notification('EaseSave', {
+            body: 'Log your expenses for today 📝',
+          });
+        }
+        scheduleDailyNotification();
+      }, delay);
+    }
+
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    // -------------------- NAVIGATION --------------------
+    function setupNav() {
+      navItems.forEach(item => {
+        item.addEventListener('click', () => {
+          const screen = item.dataset.screen;
+          switchScreen(screen);
+        });
+      });
+
+      fabLog.addEventListener('click', () => {
+        switchScreen('log');
+      });
+    }
+
+    function switchScreen(screenId) {
+      Object.values(screens).forEach(el => el.classList.remove('active'));
+      screens[screenId].classList.add('active');
+      navItems.forEach(item => {
+        item.classList.toggle('active', item.dataset.screen === screenId);
+      });
+      if (screenId === 'transactions') updateTransactions();
+      if (screenId === 'report') updateReport();
+      if (screenId === 'savings') updateSavingsUI();
+      if (screenId === 'dashboard') updateDashboard();
+    }
+
+    // -------------------- SERVICE WORKER --------------------
+    function registerServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+          .then(() => console.log('SW registered'))
+          .catch(err => console.warn('SW registration failed', err));
+      }
+    }
+
+    // -------------------- EXPOSE FOR DEBUG --------------------
+    window.__easesave = {
+      supabase,
+      allTransactions,
+      allSavings,
+      updateDashboard,
+      updateTransactions,
+      updateReport,
+      updateSavingsUI,
+    };
+
+    console.log('EaseSave loaded.');
+  </script>
+</body>
+</html>
