@@ -1,38 +1,58 @@
 const CACHE_NAME = 'easesave-v1';
-const ASSETS = [
-  '/',
-  '/index.html',
-  '/dashboard.html',
-  '/log.html',
-  '/report.html',
-  '/savings.html',
-  '/css/style.css',
-  '/js/supabase.js',
-  '/js/auth.js',
-  '/js/dashboard.js',
-  '/js/log.js',
-  '/js/report.js',
-  '/js/savings.js'
+const urlsToCache = [
+  './',
+  './index.html',
+  './manifest.json'
 ];
 
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(ASSETS))
-      .then(() => self.skipWaiting())
+      .then(cache => cache.addAll(urlsToCache))
   );
 });
-
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.map(k => {
-      if (k !== CACHE_NAME) return caches.delete(k);
-    }});
 
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
-      .then(response => response || fetch(event.request))
-      .catch(() => caches.match('/index.html'))
+      .then(cachedResponse => {
+        // If we have a cached response, return it
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        // Otherwise, fetch from network
+        return fetch(event.request)
+          .then(networkResponse => {
+            // Check if we got a valid response
+            if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+              return networkResponse;
+            }
+            // Clone the response before caching so we can return it
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, responseToCache);
+            });
+            return networkResponse;
+          })
+          .catch(() => {
+            // Fallback offline response
+            return new Response('You are offline', { status: 503 });
+          });
+      })
+  );
+});
+
+self.addEventListener('activate', event => {
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (!cacheWhitelist.includes(cacheName)) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
   );
 });
