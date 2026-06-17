@@ -16,22 +16,18 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(cachedResponse => {
-        // If we have a cached response, return it
         if (cachedResponse) {
           return cachedResponse;
         }
-        // Otherwise, fetch from network
         return fetch(event.request)
           .then(networkResponse => {
-            // Check if we got a valid response
-            if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-              return networkResponse;
+            // If we get a valid response, clone and cache it
+            if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+              const responseToCache = networkResponse.clone();
+              caches.open(CACHE_NAME).then(cache => {
+                cache.put(event.request, responseToCache);
+              });
             }
-            // Clone the response before caching so we can return it
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(event.request, responseToCache);
-            });
             return networkResponse;
           })
           .catch(() => {
