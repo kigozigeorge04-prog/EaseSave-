@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -91,39 +90,77 @@
     .w-full { width:100%; }
     .btn-primary { background:var(--plum); color:white; border:none; padding:12px 20px; border-radius:30px; font-weight:600; font-size:16px; width:100%; cursor:pointer; transition:0.2s; }
     .btn-primary:active { opacity:0.8; }
+    .btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
     .btn-outline { background:transparent; border:2px solid var(--plum); color:var(--plum); padding:10px 20px; border-radius:30px; font-weight:600; width:100%; cursor:pointer; }
 
     .dashboard-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
     .dashboard-header h1 { font-size:24px; font-weight:700; color:var(--plum); }
-    .logout-btn { background:none; border:none; color:var(--plum); font-size:24px; cursor:pointer; transition:0.2s; }
-    .logout-btn:hover { color:var(--soft-red); }
 
-    #authScreen { display:flex; flex-direction:column; justify-content:center; min-height:100vh; padding:32px 24px; background:radial-gradient(circle at 30% 10%, #1a1029, #0b0712 90%); position:relative; overflow:hidden; }
-    #authScreen::before { content:''; position:absolute; top:-20%; left:-20%; width:140%; height:140%; background:radial-gradient(circle at 70% 30%, rgba(245,166,35,0.08) 0%, transparent 60%); animation:pulseGlow 8s ease-in-out infinite alternate; pointer-events:none; }
-    @keyframes pulseGlow { 0% { opacity:0.3; transform:scale(1); } 100% { opacity:0.8; transform:scale(1.1); } }
-    #authScreen .logo { font-size:32px; font-weight:700; color:#fff; margin-bottom:4px; text-shadow:0 0 20px rgba(245,166,35,0.3); position:relative; z-index:2; }
-    #authScreen .sub { color:rgba(255,255,255,0.6); margin-bottom:32px; font-weight:400; position:relative; z-index:2; }
-    .auth-card { background:rgba(255,255,255,0.06); backdrop-filter:blur(16px) saturate(180%); -webkit-backdrop-filter:blur(16px) saturate(180%); border-radius:24px; padding:28px 24px; border:1px solid rgba(255,255,255,0.08); box-shadow:0 20px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05); position:relative; z-index:2; }
-    .auth-input { width:100%; padding:14px 16px; border-radius:14px; border:1px solid rgba(255,255,255,0.12); font-size:16px; background:rgba(255,255,255,0.05); color:#fff; margin-bottom:16px; transition:0.3s; outline:none; font-family:'DM Sans',sans-serif; }
-    .auth-input::placeholder { color:rgba(255,255,255,0.35); }
-    .auth-input:focus { border-color:var(--amber); box-shadow:0 0 20px rgba(245,166,35,0.15); background:rgba(255,255,255,0.08); }
-    .auth-input:-webkit-autofill { -webkit-box-shadow:0 0 0 30px #1a1029 inset !important; -webkit-text-fill-color:#fff !important; }
-    .btn-primary.auth-btn { background:linear-gradient(135deg, var(--amber), #d98e1c); color:#1a1029; font-weight:700; border:none; padding:14px 20px; border-radius:30px; font-size:16px; width:100%; cursor:pointer; transition:0.3s; box-shadow:0 8px 24px rgba(245,166,35,0.25); letter-spacing:0.3px; }
-    .btn-primary.auth-btn:hover { transform:translateY(-2px); box-shadow:0 12px 32px rgba(245,166,35,0.4); }
-    .btn-primary.auth-btn:active { transform:scale(0.97); }
-    .auth-toggle { text-align:center; margin-top:20px; color:rgba(255,255,255,0.6); font-weight:500; cursor:pointer; transition:0.2s; font-size:14px; position:relative; z-index:2; }
-    .auth-toggle:hover { color:#fff; }
-    #authError { margin-bottom:16px; background:rgba(224,92,92,0.15); border-left-color:var(--soft-red); color:#ffb3b3; backdrop-filter:blur(4px); }
-    .auth-footer-note { margin-top:24px; font-size:12px; color:rgba(255,255,255,0.3); text-align:center; position:relative; z-index:2; }
-    .particle { position:absolute; border-radius:50%; background:var(--amber); opacity:0.08; pointer-events:none; animation:floatParticle 12s infinite alternate ease-in-out; z-index:1; }
-    .particle:nth-child(1) { width:80px; height:80px; top:10%; left:5%; animation-duration:14s; }
-    .particle:nth-child(2) { width:120px; height:120px; bottom:10%; right:5%; animation-duration:18s; background:#7BAE8A; opacity:0.06; }
-    .particle:nth-child(3) { width:60px; height:60px; top:40%; right:15%; animation-duration:10s; background:#E05C5C; opacity:0.05; }
-    @keyframes floatParticle { 0% { transform:translate(0,0) scale(1); } 100% { transform:translate(30px,-30px) scale(1.2); } }
-    @media (min-width:480px) { body { max-width:480px; margin:0 auto; border-left:1px solid #e9e3dc; border-right:1px solid #e9e3dc; } #authScreen { max-width:480px; margin:0 auto; } }
-    #appShell { display:none; }
+    /* Nice Date Display */
+    .date-display {
+      background: linear-gradient(135deg, var(--plum), var(--plum-light));
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      color: white;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .date-display .date-main {
+      font-size: 20px;
+      font-weight: 600;
+    }
+    .date-display .date-sub {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+    .date-display .date-day {
+      font-size: 36px;
+      font-weight: 700;
+      opacity: 0.9;
+    }
 
-    /* Calendar styles */
+    /* Stipend editable */
+    .stipend-input-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 4px;
+    }
+    .stipend-input-group input {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 2px solid #e9e3dc;
+      font-size: 16px;
+      font-family: 'DM Mono', monospace;
+      background: white;
+      color: var(--text-dark);
+      outline: none;
+      transition: 0.2s;
+      width: 100px;
+    }
+    .stipend-input-group input:focus {
+      border-color: var(--plum);
+    }
+    .stipend-input-group .save-stipend-btn {
+      background: var(--sage);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+      transition: 0.2s;
+      white-space: nowrap;
+    }
+    .stipend-input-group .save-stipend-btn:hover {
+      background: var(--sage-dark);
+    }
+
+    /* Calendar styles (kept for calendar tab) */
     .cal-day {
       padding: 8px 0;
       text-align: center;
@@ -162,28 +199,6 @@
 </head>
 <body>
 
-  <!-- ==================== AUTH SCREEN ==================== -->
-  <div id="authScreen">
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-
-    <div class="logo">💰 EaseSave</div>
-    <div class="sub">Track every shilling, master your money.</div>
-
-    <div class="auth-card">
-      <div id="authError" class="alert-banner danger" style="display:none;"></div>
-
-      <input type="email" id="authEmail" class="auth-input" placeholder="Email" />
-      <input type="password" id="authPassword" class="auth-input" placeholder="Password" />
-
-      <button id="authButton" class="btn-primary auth-btn">Sign In</button>
-      <div class="auth-toggle" id="authToggle">Don't have an account? Sign Up</div>
-    </div>
-
-    <div class="auth-footer-note">Demo: any email/password (Supabase Auth)</div>
-  </div>
-
   <!-- ==================== APP SHELL ==================== -->
   <div id="appShell">
 
@@ -191,9 +206,18 @@
     <div id="screen-dashboard" class="screen active">
       <div class="dashboard-header">
         <h1>📊 EaseSave</h1>
-        <button class="logout-btn" id="logoutBtn" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
       </div>
       <div id="alertContainer"></div>
+
+      <!-- Nice Date Display -->
+      <div class="date-display" id="dateDisplay">
+        <div>
+          <div class="date-main" id="dateMain">Today</div>
+          <div class="date-sub" id="dateSub">January 1, 2026</div>
+        </div>
+        <div class="date-day" id="dateDay">1</div>
+      </div>
+
       <div class="card" style="text-align:center;">
         <div style="position:relative; display:inline-block;">
           <canvas id="pulseCanvas" width="140" height="140"></canvas>
@@ -214,19 +238,6 @@
       </div>
       <div class="card"><div class="card-title">Spending by Category</div><div id="categoryBars"></div></div>
       <div class="card"><div class="card-title">Recent Transactions</div><div id="recentTxs"></div></div>
-      <!-- Calendar on Dashboard -->
-      <div class="card" style="padding-bottom:8px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-          <button id="calPrevDash" class="btn-outline" style="width:auto; padding:4px 12px; background:transparent; border:2px solid var(--plum); border-radius:30px; font-weight:600; cursor:pointer;">‹</button>
-          <h3 id="calMonthYearDash" style="font-weight:600; text-align:center; flex:1; font-size:16px;">Month Year</h3>
-          <button id="calNextDash" class="btn-outline" style="width:auto; padding:4px 12px; background:transparent; border:2px solid var(--plum); border-radius:30px; font-weight:600; cursor:pointer;">›</button>
-        </div>
-        <div id="calendarGridDash" style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px;"></div>
-        <div id="dayTransactionsDash" class="card" style="display:none; margin-top:12px; padding:12px;">
-          <div class="flex-row"><span class="card-title" id="selectedDayLabelDash">Transactions for DD/MM/YYYY</span><span class="badge" id="selectedDayCountDash">0</span></div>
-          <div id="dayTxListDash"></div>
-        </div>
-      </div>
     </div>
 
     <!-- SCREEN: Log Transaction -->
@@ -292,10 +303,15 @@
         </div>
         <div id="savingsError" class="alert-banner danger" style="display:none;"></div>
       </div>
-      <!-- NEW: Monthly Stipend Card -->
+      <!-- Monthly Stipend Card with editable amount -->
       <div class="card" id="stipendCard">
         <div class="flex-row"><span><strong>📆 Monthly Stipend</strong></span><span id="stipendStatus" class="stipend-status amber">Not yet received ⏳</span></div>
-        <button id="markStipendBtn" class="btn-primary" style="margin-top:8px; padding:10px;">Mark Stipend as Received</button>
+        <div class="stipend-input-group">
+          <span style="font-weight:500; color:var(--text-muted);">Amount:</span>
+          <input type="number" id="stipendAmountInput" value="300000" step="10000" />
+          <button class="save-stipend-btn" id="saveStipendBtn">Save</button>
+        </div>
+        <button id="markStipendBtn" class="btn-primary" style="margin-top:10px; padding:10px;">Mark Stipend as Received</button>
       </div>
       <div class="card">
         <div class="card-title">Emergency Buffer</div>
@@ -307,7 +323,7 @@
       <div class="card"><div class="card-title">Month-on-Month Growth</div><canvas id="savingsChart" width="300" height="120"></canvas></div>
     </div>
 
-    <!-- CALENDAR SCREEN (kept) -->
+    <!-- CALENDAR SCREEN -->
     <div id="screen-calendar" class="screen">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
         <button id="calPrev" class="btn-outline" style="width:auto; padding:6px 16px; background:transparent; border:2px solid var(--plum); border-radius:30px; font-weight:600; cursor:pointer;">‹</button>
@@ -337,14 +353,7 @@
 
   <!-- ==================== JAVASCRIPT ==================== -->
   <script>
-    // -------------------- SUPABASE CONFIG --------------------
-    const SUPABASE_URL = 'https://hxjvyaxofswozhliuwmg.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh4anZ5YXhvZnN3b3pobGl1d21nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NDgzNzksImV4cCI6MjA5NzIyNDM3OX0.QdsUWpyldHtwgNkPLrqwz7IGYOAclJEE5fPY9thMvuY';
-
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
     // -------------------- STATE --------------------
-    let currentUser = null;
     let allTransactions = [];
     let allSavings = [];
     let categoryLimits = {};
@@ -382,13 +391,7 @@
     const $ = (sel) => document.querySelector(sel);
     const $$ = (sel) => document.querySelectorAll(sel);
 
-    const authScreen = $('#authScreen');
     const appShell = $('#appShell');
-    const authEmail = $('#authEmail');
-    const authPassword = $('#authPassword');
-    const authButton = $('#authButton');
-    const authToggle = $('#authToggle');
-    const authError = $('#authError');
 
     const screens = {
       dashboard: $('#screen-dashboard'),
@@ -401,168 +404,6 @@
 
     const navItems = $$('.nav-item');
     const fabLog = $('#fabLog');
-    const logoutBtn = $('#logoutBtn');
-
-    // -------------------- AUTH --------------------
-    let isSignUp = false;
-
-    authToggle.addEventListener('click', () => {
-      isSignUp = !isSignUp;
-      authButton.textContent = isSignUp ? 'Sign Up' : 'Sign In';
-      authToggle.textContent = isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up";
-      authError.style.display = 'none';
-    });
-
-    authButton.addEventListener('click', async () => {
-      const email = authEmail.value.trim();
-      const password = authPassword.value.trim();
-      if (!email || !password) {
-        authError.textContent = 'Please fill in all fields.';
-        authError.style.display = 'block';
-        return;
-      }
-      authError.style.display = 'none';
-
-      let result;
-      if (isSignUp) {
-        result = await supabase.auth.signUp({ email, password });
-      } else {
-        result = await supabase.auth.signInWithPassword({ email, password });
-      }
-
-      if (result.error) {
-        authError.textContent = result.error.message;
-        authError.style.display = 'block';
-        return;
-      }
-
-      if (isSignUp && !result.data.session) {
-        authError.textContent = '✅ Sign-up successful! Please check your email to confirm your account, then sign in.';
-        authError.className = 'alert-banner success';
-        authError.style.display = 'block';
-        return;
-      }
-
-      currentUser = result.data.user;
-      authScreen.style.display = 'none';
-      appShell.style.display = 'block';
-      initApp();
-    });
-
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        currentUser = data.session.user;
-        authScreen.style.display = 'none';
-        appShell.style.display = 'block';
-        initApp();
-      }
-    });
-
-    // -------------------- LOGOUT --------------------
-    logoutBtn.addEventListener('click', async () => {
-      if (confirm('Logout?')) {
-        await supabase.auth.signOut();
-        currentUser = null;
-        allTransactions = [];
-        allSavings = [];
-        authScreen.style.display = 'flex';
-        appShell.style.display = 'none';
-        authEmail.value = '';
-        authPassword.value = '';
-        authError.style.display = 'none';
-        isSignUp = false;
-        authButton.textContent = 'Sign In';
-        authToggle.textContent = "Don't have an account? Sign Up";
-      }
-    });
-
-    // -------------------- APP INIT --------------------
-    async function initApp() {
-      await loadData();
-      setupCategoryGrid();
-      setupNumPad();
-      setupDateInput();
-      setupNav();
-      setupFilters();
-      setupReport();
-      setupSavings();
-      setupStipend();
-      updateDashboard();
-      updateTransactions();
-      updateReport();
-      updateSavingsUI();
-      updateCalendar();
-      checkAlerts();
-      registerServiceWorker();
-    }
-
-    // -------------------- DATA LOADING --------------------
-    async function loadData() {
-      try {
-        const { data: txs, error: txErr } = await supabase
-          .from('transactions')
-          .select('*')
-          .order('date', { ascending: false });
-        if (txErr) throw txErr;
-        allTransactions = txs || [];
-
-        const { data: savings, error: svErr } = await supabase
-          .from('savings_log')
-          .select('*')
-          .order('date', { ascending: false });
-        if (svErr) throw svErr;
-        allSavings = savings || [];
-
-        const { data: budgets, error: bErr } = await supabase
-          .from('budgets')
-          .select('*')
-          .eq('month', currentMonth);
-        if (bErr) throw bErr;
-        if (budgets && budgets.length) {
-          budgets.forEach(b => { categoryLimits[b.category] = b.monthly_limit; });
-        } else {
-          categoryLimits = { ...DEFAULT_BUDGETS };
-        }
-
-        computeBalances();
-
-        const { data: profile, error: pErr } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', currentUser.id)
-          .single();
-        if (!pErr && profile) {
-          monthlyStipend = profile.monthly_stipend || 300000;
-          const emg = localStorage.getItem('emergencyBalance');
-          if (emg) emergencyBalance = parseFloat(emg);
-        }
-      } catch (e) {
-        console.warn('Supabase offline, using localStorage fallback', e);
-        const localTxs = localStorage.getItem('easesave_txs');
-        allTransactions = localTxs ? JSON.parse(localTxs) : [];
-        const localSavings = localStorage.getItem('easesave_savings');
-        allSavings = localSavings ? JSON.parse(localSavings) : [];
-        categoryLimits = { ...DEFAULT_BUDGETS };
-        computeBalances();
-        const emg = localStorage.getItem('emergencyBalance');
-        emergencyBalance = emg ? parseFloat(emg) : 0;
-      }
-    }
-
-    function computeBalances() {
-      let balance = 0;
-      allSavings.forEach(s => {
-        if (s.direction === 'deposit') balance += s.amount;
-        else balance -= s.amount;
-      });
-      sanlamBalance = balance;
-    }
-
-    function saveLocalData() {
-      localStorage.setItem('easesave_txs', JSON.stringify(allTransactions));
-      localStorage.setItem('easesave_savings', JSON.stringify(allSavings));
-      localStorage.setItem('emergencyBalance', emergencyBalance.toString());
-    }
 
     // -------------------- UI HELPERS --------------------
     function formatMoney(amount) {
@@ -588,6 +429,66 @@
       updateStipendUI();
     }
 
+    // -------------------- SAMPLE DATA --------------------
+    function seedSampleData() {
+      const now = new Date();
+      const today = now.toISOString().slice(0, 10);
+      const month = now.toISOString().slice(0, 7);
+      const yesterday = new Date(now);
+      yesterday.setDate(now.getDate() - 1);
+      const yestStr = yesterday.toISOString().slice(0, 10);
+
+      const sampleTxs = [
+        { id: '1', date: today, amount: 5000, type: 'expense', category: 'breakfast', account: 'cash', note: 'Breakfast at Nakasero', created_at: new Date().toISOString() },
+        { id: '2', date: today, amount: 12000, type: 'expense', category: 'lunch', account: 'momo', note: 'Lunch with colleagues', created_at: new Date().toISOString() },
+        { id: '3', date: yestStr, amount: 25000, type: 'expense', category: 'social', account: 'cash', note: 'Football game', created_at: new Date().toISOString() },
+        { id: '4', date: yestStr, amount: 15000, type: 'expense', category: 'airtime', account: 'momo', note: 'Monthly data bundle', created_at: new Date().toISOString() },
+        { id: '5', date: today, amount: 15000, type: 'expense', category: 'unaccounted', account: 'cash', note: 'Miscellaneous', created_at: new Date().toISOString() },
+      ];
+
+      const sampleSavings = [
+        { id: 's1', date: today, amount: 25000, direction: 'deposit', reason: 'regular', sanlam_balance_after: 25000, note: 'Auto-save from stipend', created_at: new Date().toISOString() },
+        { id: 's2', date: yestStr, amount: 10000, direction: 'deposit', reason: 'regular', sanlam_balance_after: 10000, note: 'Manual savings', created_at: new Date().toISOString() },
+      ];
+
+      if (allTransactions.length === 0) allTransactions = sampleTxs;
+      if (allSavings.length === 0) allSavings = sampleSavings;
+
+      computeBalances();
+      emergencyBalance = 20000;
+      categoryLimits = { ...DEFAULT_BUDGETS };
+      saveLocalData();
+    }
+
+    function computeBalances() {
+      let balance = 0;
+      allSavings.forEach(s => {
+        if (s.direction === 'deposit') balance += s.amount;
+        else balance -= s.amount;
+      });
+      sanlamBalance = balance;
+    }
+
+    function saveLocalData() {
+      localStorage.setItem('easesave_txs', JSON.stringify(allTransactions));
+      localStorage.setItem('easesave_savings', JSON.stringify(allSavings));
+      localStorage.setItem('emergencyBalance', emergencyBalance.toString());
+      localStorage.setItem('monthlyStipend', monthlyStipend.toString());
+    }
+
+    function loadLocalData() {
+      const localTxs = localStorage.getItem('easesave_txs');
+      allTransactions = localTxs ? JSON.parse(localTxs) : [];
+      const localSavings = localStorage.getItem('easesave_savings');
+      allSavings = localSavings ? JSON.parse(localSavings) : [];
+      const emg = localStorage.getItem('emergencyBalance');
+      emergencyBalance = emg ? parseFloat(emg) : 0;
+      const stip = localStorage.getItem('monthlyStipend');
+      monthlyStipend = stip ? parseFloat(stip) : 300000;
+      categoryLimits = { ...DEFAULT_BUDGETS };
+      computeBalances();
+    }
+
     // -------------------- DASHBOARD --------------------
     function updateDashboard() {
       const now = new Date();
@@ -596,6 +497,13 @@
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       const dayOfMonth = now.getDate();
       const daysLeft = daysInMonth - dayOfMonth;
+
+      // Update date display
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      $('#dateMain').textContent = dayNames[now.getDay()];
+      $('#dateSub').textContent = `${monthNames[month]} ${dayOfMonth}, ${year}`;
+      $('#dateDay').textContent = dayOfMonth;
 
       const monthStr = now.toISOString().slice(0, 7);
       const monthTxs = allTransactions.filter(t => t.date && t.date.startsWith(monthStr));
@@ -606,13 +514,9 @@
 
       const canvas = $('#pulseCanvas');
       const ctx = canvas.getContext('2d');
-      const w = 140,
-        h = 140;
+      const w = 140, h = 140;
       ctx.clearRect(0, 0, w, h);
-      const cx = w / 2,
-        cy = h / 2,
-        r = 56,
-        lineWidth = 12;
+      const cx = w / 2, cy = h / 2, r = 56, lineWidth = 12;
       const startAngle = -Math.PI / 2;
       const endAngle = startAngle + (percent / 100) * 2 * Math.PI;
       ctx.beginPath();
@@ -765,19 +669,16 @@
 
       if (type === 'income' && !editingTxId) {
         if (selectedCategory === 'income_stipend') {
-          const confirmSave = confirm(
-            'Stipend income detected. You must save 25,000 UGX to Sanlam. Continue?');
+          const confirmSave = confirm('Stipend income detected. You must save 25,000 UGX to Sanlam. Continue?');
           if (!confirmSave) return;
           await logSavings(25000, 'deposit', 'regular', `Auto-save from stipend on ${date}`);
           showAlert('Reminder: 25k saved to Sanlam ✅', 'success');
         } else {
-          const saveFirst = confirm(
-            'Irregular income detected. Would you like to save a portion to Sanlam? (Recommended)');
+          const saveFirst = confirm('Irregular income detected. Would you like to save a portion to Sanlam? (Recommended)');
           if (saveFirst) {
             const amountToSave = prompt('Enter amount to save (UGX):', '25000');
             if (amountToSave && !isNaN(amountToSave) && parseFloat(amountToSave) > 0) {
-              await logSavings(parseFloat(amountToSave), 'deposit', 'regular',
-                `Savings from irregular income on ${date}`);
+              await logSavings(parseFloat(amountToSave), 'deposit', 'regular', `Savings from irregular income on ${date}`);
               showAlert('Savings logged ✅', 'success');
             }
           }
@@ -793,37 +694,14 @@
         note: note,
       };
 
-      try {
-        if (editingTxId) {
-          const { error } = await supabase
-            .from('transactions')
-            .update(txData)
-            .eq('id', editingTxId);
-          if (error) throw error;
-          const index = allTransactions.findIndex(t => t.id === editingTxId);
-          if (index !== -1) {
-            allTransactions[index] = { ...allTransactions[index], ...txData };
-          }
-        } else {
-          const newTx = { id: Date.now().toString(), ...txData, created_at: new Date().toISOString() };
-          const { error } = await supabase.from('transactions').insert(newTx);
-          if (error) throw error;
-          allTransactions.unshift(newTx);
-        }
-        saveLocalData();
-      } catch (e) {
-        console.warn('Supabase operation failed, saving locally', e);
-        if (editingTxId) {
-          const index = allTransactions.findIndex(t => t.id === editingTxId);
-          if (index !== -1) {
-            allTransactions[index] = { ...allTransactions[index], ...txData };
-          }
-        } else {
-          const newTx = { id: Date.now().toString(), ...txData, created_at: new Date().toISOString() };
-          allTransactions.unshift(newTx);
-        }
-        saveLocalData();
+      if (editingTxId) {
+        const index = allTransactions.findIndex(t => t.id === editingTxId);
+        if (index !== -1) allTransactions[index] = { ...allTransactions[index], ...txData };
+      } else {
+        const newTx = { id: Date.now().toString(), ...txData, created_at: new Date().toISOString() };
+        allTransactions.unshift(newTx);
       }
+      saveLocalData();
 
       editingTxId = null;
       $('#submitTxBtn').textContent = 'Submit Transaction';
@@ -900,18 +778,9 @@
 
     async function deleteTransaction(id) {
       if (!confirm('Delete this transaction?')) return;
-      try {
-        const { error } = await supabase.from('transactions').delete().eq('id', id);
-        if (error) throw error;
-        allTransactions = allTransactions.filter(t => t.id !== id);
-        saveLocalData();
-        updateAllScreens();
-      } catch (e) {
-        console.warn('Delete failed, removing locally', e);
-        allTransactions = allTransactions.filter(t => t.id !== id);
-        saveLocalData();
-        updateAllScreens();
-      }
+      allTransactions = allTransactions.filter(t => t.id !== id);
+      saveLocalData();
+      updateAllScreens();
     }
 
     // -------------------- TRANSACTIONS LIST --------------------
@@ -921,12 +790,8 @@
       const monthFilter = $('#filterMonth').value;
 
       let filtered = allTransactions;
-      if (categoryFilter !== 'all') {
-        filtered = filtered.filter(t => t.category === categoryFilter);
-      }
-      if (monthFilter !== 'all') {
-        filtered = filtered.filter(t => t.date && t.date.startsWith(monthFilter));
-      }
+      if (categoryFilter !== 'all') filtered = filtered.filter(t => t.category === categoryFilter);
+      if (monthFilter !== 'all') filtered = filtered.filter(t => t.date && t.date.startsWith(monthFilter));
 
       $('#txCount').textContent = filtered.length;
 
@@ -979,9 +844,7 @@
       const monthSelect = $('#filterMonth');
       monthSelect.innerHTML = '<option value="all">All Months</option>';
       const months = new Set();
-      allTransactions.forEach(t => {
-        if (t.date) months.add(t.date.slice(0, 7));
-      });
+      allTransactions.forEach(t => { if (t.date) months.add(t.date.slice(0, 7)); });
       [...months].sort().forEach(m => {
         const opt = document.createElement('option');
         opt.value = m;
@@ -1065,13 +928,6 @@
         created_at: new Date().toISOString(),
       };
 
-      try {
-        const { error } = await supabase.from('savings_log').insert(newEntry);
-        if (error) throw error;
-      } catch (e) {
-        console.warn('Supabase savings insert failed', e);
-      }
-
       allSavings.unshift(newEntry);
       saveLocalData();
       if (direction === 'deposit') sanlamBalance += amount;
@@ -1112,8 +968,7 @@
     function drawSavingsChart() {
       const canvas = $('#savingsChart');
       const ctx = canvas.getContext('2d');
-      const w = canvas.width,
-        h = canvas.height;
+      const w = canvas.width, h = canvas.height;
       ctx.clearRect(0, 0, w, h);
 
       const monthlyNet = {};
@@ -1155,9 +1010,23 @@
       setTimeout(() => el.style.display = 'none', 3000);
     }
 
-    // -------------------- STIPEND TRACKER (Change 1) --------------------
+    // -------------------- STIPEND TRACKER (editable) --------------------
     function setupStipend() {
+      $('#stipendAmountInput').value = monthlyStipend;
       updateStipendUI();
+
+      $('#saveStipendBtn').addEventListener('click', () => {
+        const val = parseFloat($('#stipendAmountInput').value);
+        if (val && val > 0) {
+          monthlyStipend = val;
+          saveLocalData();
+          updateStipendUI();
+          showAlert(`Stipend amount updated to ${formatMoney(monthlyStipend)} UGX`, 'success');
+        } else {
+          showAlert('Please enter a valid amount.', 'danger');
+        }
+      });
+
       $('#markStipendBtn').addEventListener('click', markStipendReceived);
     }
 
@@ -1165,38 +1034,36 @@
       const now = new Date();
       const monthStr = now.toISOString().slice(0, 7);
       const stipendTx = allTransactions.find(t =>
-        t.category === 'income_stipend' &&
-        t.date &&
-        t.date.startsWith(monthStr)
+        t.category === 'income_stipend' && t.date && t.date.startsWith(monthStr)
       );
       const statusEl = $('#stipendStatus');
       const btn = $('#markStipendBtn');
+      const input = $('#stipendAmountInput');
 
       if (stipendTx) {
-        statusEl.textContent = `300,000 UGX received this month ✅`;
+        statusEl.textContent = `${formatMoney(monthlyStipend)} UGX received this month ✅`;
         statusEl.className = 'stipend-status sage';
         btn.textContent = 'Stipend received this month ✅';
         btn.disabled = true;
         btn.style.opacity = '0.6';
         btn.style.cursor = 'default';
       } else {
-        statusEl.textContent = 'Not yet received ⏳';
+        statusEl.textContent = `Not yet received ⏳ (${formatMoney(monthlyStipend)} UGX)`;
         statusEl.className = 'stipend-status amber';
         btn.textContent = 'Mark Stipend as Received';
         btn.disabled = false;
         btn.style.opacity = '1';
         btn.style.cursor = 'pointer';
       }
+
+      input.value = monthlyStipend;
     }
 
     async function markStipendReceived() {
       const now = new Date();
       const monthStr = now.toISOString().slice(0, 7);
-      // Double-check no stipend this month
       const existing = allTransactions.find(t =>
-        t.category === 'income_stipend' &&
-        t.date &&
-        t.date.startsWith(monthStr)
+        t.category === 'income_stipend' && t.date && t.date.startsWith(monthStr)
       );
       if (existing) {
         updateStipendUI();
@@ -1213,24 +1080,12 @@
         note: 'Monthly stipend',
       };
 
-      try {
-        const newTx = { id: Date.now().toString(), ...txData, created_at: new Date().toISOString() };
-        const { error } = await supabase.from('transactions').insert(newTx);
-        if (error) throw error;
-        allTransactions.unshift(newTx);
-        saveLocalData();
-        // Auto-save 25k to Sanlam
-        await logSavings(25000, 'deposit', 'regular', `Auto-save from stipend on ${date}`);
-        showAlert('Stipend logged and 25k saved to Sanlam ✅', 'success');
-        updateAllScreens();
-      } catch (e) {
-        console.warn('Stipend logging failed, saving locally', e);
-        const newTx = { id: Date.now().toString(), ...txData, created_at: new Date().toISOString() };
-        allTransactions.unshift(newTx);
-        saveLocalData();
-        await logSavings(25000, 'deposit', 'regular', `Auto-save from stipend on ${date}`);
-        updateAllScreens();
-      }
+      const newTx = { id: Date.now().toString(), ...txData, created_at: new Date().toISOString() };
+      allTransactions.unshift(newTx);
+      saveLocalData();
+      await logSavings(25000, 'deposit', 'regular', `Auto-save from stipend on ${date}`);
+      showAlert(`Stipend (${formatMoney(monthlyStipend)} UGX) logged and 25k saved to Sanlam ✅`, 'success');
+      updateAllScreens();
     }
 
     // -------------------- ALERTS --------------------
@@ -1266,15 +1121,6 @@
           showAlert(`Unaccounted expenses this month: ${formatMoney(unaccounted)}. Please review.`, 'danger');
         }
       }
-
-      const stipendIncome = monthTxs.filter(t => t.category === 'income_stipend').length;
-      const savingsThisMonth = allSavings.filter(s => s.date && s.date.startsWith(monthStr) && s.direction === 'deposit')
-        .length;
-      if (stipendIncome > 0 && savingsThisMonth === 0) {
-        showAlert('Stipend logged but no savings yet. Save 25k to Sanlam!', 'warning');
-      }
-
-      scheduleDailyNotification();
     }
 
     function showAlert(message, type = 'warning') {
@@ -1285,36 +1131,15 @@
       container.appendChild(div);
     }
 
-    function scheduleDailyNotification() {
-      const now = new Date();
-      const target = new Date(now);
-      target.setHours(22, 0, 0, 0);
-      let delay = target - now;
-      if (delay < 0) delay += 24 * 60 * 60 * 1000;
-      setTimeout(() => {
-        if (Notification.permission === 'granted') {
-          new Notification('EaseSave', {
-            body: 'Log your expenses for today 📝',
-          });
-        }
-        scheduleDailyNotification();
-      }, delay);
-    }
-
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-
-    // -------------------- CALENDAR (shared) --------------------
+    // -------------------- CALENDAR (only on calendar tab) --------------------
     let calYear = new Date().getFullYear();
     let calMonth = new Date().getMonth();
     let selectedDate = null;
 
-    function renderCalendar(year, month, gridId, monthYearId, dayContainerId, dayLabelId, dayCountId, dayListId) {
-      const grid = document.getElementById(gridId);
-      const monthYearEl = document.getElementById(monthYearId);
+    function renderCalendar(year, month) {
+      const grid = $('#calendarGrid');
       const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-      if (monthYearEl) monthYearEl.textContent = `${monthNames[month]} ${year}`;
+      $('#calMonthYear').textContent = `${monthNames[month]} ${year}`;
 
       let html = '';
       const weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -1337,7 +1162,7 @@
         if (hasTx) classes.push('has-tx');
         if (isToday) classes.push('today');
         html += `
-          <div class="${classes.join(' ')}" data-date="${dateStr}" data-grid="${gridId}">
+          <div class="${classes.join(' ')}" data-date="${dateStr}">
             ${dayCount}
             ${hasTx ? '<div class="dot"></div>' : ''}
           </div>
@@ -1351,27 +1176,27 @@
         if (el.dataset.date) {
           el.addEventListener('click', () => {
             selectedDate = el.dataset.date;
-            showDayTransactions(selectedDate, dayContainerId, dayLabelId, dayCountId, dayListId, gridId);
+            showDayTransactions(selectedDate);
           });
         }
       });
 
       if (selectedDate) {
-        showDayTransactions(selectedDate, dayContainerId, dayLabelId, dayCountId, dayListId, gridId);
+        showDayTransactions(selectedDate);
       } else {
         const today = new Date().toISOString().slice(0,10);
         if (today.startsWith(`${year}-${String(month+1).padStart(2,'0')}`)) {
           selectedDate = today;
-          showDayTransactions(today, dayContainerId, dayLabelId, dayCountId, dayListId, gridId);
+          showDayTransactions(today);
         }
       }
     }
 
-    function showDayTransactions(dateStr, containerId, labelId, countId, listId, gridId) {
-      const container = document.getElementById(containerId);
-      const list = document.getElementById(listId);
-      const label = document.getElementById(labelId);
-      const count = document.getElementById(countId);
+    function showDayTransactions(dateStr) {
+      const container = $('#dayTransactions');
+      const list = $('#dayTxList');
+      const label = $('#selectedDayLabel');
+      const count = $('#selectedDayCount');
 
       const txs = allTransactions.filter(t => t.date && t.date.startsWith(dateStr));
       if (txs.length === 0) {
@@ -1400,7 +1225,6 @@
         `;
       });
 
-      // Highlight selected day in all grids
       document.querySelectorAll('.cal-day').forEach(el => {
         const isSelected = el.dataset.date === dateStr;
         el.style.background = isSelected ? 'rgba(45,27,78,0.12)' : (el.classList.contains('has-tx') ? 'rgba(123,174,138,0.12)' : 'transparent');
@@ -1408,17 +1232,16 @@
       });
     }
 
-    // Calendar navigation (both instances)
-    function setupCalendarNav(prevId, nextId, gridId, monthYearId, dayContainerId, dayLabelId, dayCountId, dayListId) {
-      document.getElementById(prevId).addEventListener('click', () => {
+    function setupCalendarNav() {
+      $('#calPrev').addEventListener('click', () => {
         calMonth--;
         if (calMonth < 0) { calMonth = 11; calYear--; }
-        renderCalendar(calYear, calMonth, gridId, monthYearId, dayContainerId, dayLabelId, dayCountId, dayListId);
+        renderCalendar(calYear, calMonth);
       });
-      document.getElementById(nextId).addEventListener('click', () => {
+      $('#calNext').addEventListener('click', () => {
         calMonth++;
         if (calMonth > 11) { calMonth = 0; calYear++; }
-        renderCalendar(calYear, calMonth, gridId, monthYearId, dayContainerId, dayLabelId, dayCountId, dayListId);
+        renderCalendar(calYear, calMonth);
       });
     }
 
@@ -1428,9 +1251,7 @@
         calYear = now.getFullYear();
         calMonth = now.getMonth();
       }
-      // Render both calendars
-      renderCalendar(calYear, calMonth, 'calendarGrid', 'calMonthYear', 'dayTransactions', 'selectedDayLabel', 'selectedDayCount', 'dayTxList');
-      renderCalendar(calYear, calMonth, 'calendarGridDash', 'calMonthYearDash', 'dayTransactionsDash', 'selectedDayLabelDash', 'selectedDayCountDash', 'dayTxListDash');
+      renderCalendar(calYear, calMonth);
     }
 
     // -------------------- NAVIGATION --------------------
@@ -1446,9 +1267,7 @@
         switchScreen('log');
       });
 
-      // Calendar nav (both)
-      setupCalendarNav('calPrev', 'calNext', 'calendarGrid', 'calMonthYear', 'dayTransactions', 'selectedDayLabel', 'selectedDayCount', 'dayTxList');
-      setupCalendarNav('calPrevDash', 'calNextDash', 'calendarGridDash', 'calMonthYearDash', 'dayTransactionsDash', 'selectedDayLabelDash', 'selectedDayCountDash', 'dayTxListDash');
+      setupCalendarNav();
     }
 
     function switchScreen(screenId) {
@@ -1464,20 +1283,37 @@
       if (screenId === 'calendar') updateCalendar();
     }
 
-    // -------------------- SERVICE WORKER --------------------
-    function registerServiceWorker() {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js')
-          .then(() => console.log('SW registered'))
-          .catch(err => console.warn('SW registration failed', err));
+    // -------------------- INIT --------------------
+    function initApp() {
+      loadLocalData();
+      if (allTransactions.length === 0 && allSavings.length === 0) {
+        seedSampleData();
+      } else {
+        computeBalances();
       }
+
+      setupCategoryGrid();
+      setupNumPad();
+      setupDateInput();
+      setupNav();
+      setupFilters();
+      setupReport();
+      setupSavings();
+      setupStipend();
+      updateDashboard();
+      updateTransactions();
+      updateReport();
+      updateSavingsUI();
+      updateCalendar();
+      checkAlerts();
     }
 
-    // -------------------- EXPOSE FOR DEBUG --------------------
+    document.addEventListener('DOMContentLoaded', initApp);
+
     window.__easesave = {
-      supabase,
       allTransactions,
-      allSavings, 
+      allSavings,
+      monthlyStipend,
       updateDashboard,
       updateTransactions,
       updateReport,
@@ -1486,7 +1322,7 @@
       updateStipendUI,
     };
 
-    console.log('EaseSave loaded with Stipend Tracker and Calendar on Dashboard.');
+    console.log('EaseSave loaded with nice date display and editable stipend.');
   </script>
 </body>
 </html>
