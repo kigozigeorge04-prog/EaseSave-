@@ -4,9 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#2D1B4E" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>EaseSave</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -159,6 +156,8 @@
     .cal-day.has-tx .dot {
       background: var(--sage);
     }
+    .stipend-status.sage { color: var(--sage); font-weight: 600; }
+    .stipend-status.amber { color: var(--amber); font-weight: 600; }
   </style>
 </head>
 <body>
@@ -215,6 +214,19 @@
       </div>
       <div class="card"><div class="card-title">Spending by Category</div><div id="categoryBars"></div></div>
       <div class="card"><div class="card-title">Recent Transactions</div><div id="recentTxs"></div></div>
+      <!-- Calendar on Dashboard -->
+      <div class="card" style="padding-bottom:8px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+          <button id="calPrevDash" class="btn-outline" style="width:auto; padding:4px 12px; background:transparent; border:2px solid var(--plum); border-radius:30px; font-weight:600; cursor:pointer;">‹</button>
+          <h3 id="calMonthYearDash" style="font-weight:600; text-align:center; flex:1; font-size:16px;">Month Year</h3>
+          <button id="calNextDash" class="btn-outline" style="width:auto; padding:4px 12px; background:transparent; border:2px solid var(--plum); border-radius:30px; font-weight:600; cursor:pointer;">›</button>
+        </div>
+        <div id="calendarGridDash" style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px;"></div>
+        <div id="dayTransactionsDash" class="card" style="display:none; margin-top:12px; padding:12px;">
+          <div class="flex-row"><span class="card-title" id="selectedDayLabelDash">Transactions for DD/MM/YYYY</span><span class="badge" id="selectedDayCountDash">0</span></div>
+          <div id="dayTxListDash"></div>
+        </div>
+      </div>
     </div>
 
     <!-- SCREEN: Log Transaction -->
@@ -280,6 +292,11 @@
         </div>
         <div id="savingsError" class="alert-banner danger" style="display:none;"></div>
       </div>
+      <!-- NEW: Monthly Stipend Card -->
+      <div class="card" id="stipendCard">
+        <div class="flex-row"><span><strong>📆 Monthly Stipend</strong></span><span id="stipendStatus" class="stipend-status amber">Not yet received ⏳</span></div>
+        <button id="markStipendBtn" class="btn-primary" style="margin-top:8px; padding:10px;">Mark Stipend as Received</button>
+      </div>
       <div class="card">
         <div class="card-title">Emergency Buffer</div>
         <div class="flex-row"><span>Balance</span><span class="amount" id="savingsEmergencyBalance">0</span></div>
@@ -290,7 +307,7 @@
       <div class="card"><div class="card-title">Month-on-Month Growth</div><canvas id="savingsChart" width="300" height="120"></canvas></div>
     </div>
 
-    <!-- ==================== NEW: CALENDAR SCREEN ==================== -->
+    <!-- CALENDAR SCREEN (kept) -->
     <div id="screen-calendar" class="screen">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
         <button id="calPrev" class="btn-outline" style="width:auto; padding:6px 16px; background:transparent; border:2px solid var(--plum); border-radius:30px; font-weight:600; cursor:pointer;">‹</button>
@@ -469,11 +486,12 @@
       setupFilters();
       setupReport();
       setupSavings();
+      setupStipend();
       updateDashboard();
       updateTransactions();
       updateReport();
       updateSavingsUI();
-      updateCalendar();  // initial calendar render
+      updateCalendar();
       checkAlerts();
       registerServiceWorker();
     }
@@ -567,9 +585,10 @@
       updateReport();
       updateSavingsUI();
       updateCalendar();
+      updateStipendUI();
     }
 
-    // -------------------- DASHBOARD (unchanged) --------------------
+    // -------------------- DASHBOARD --------------------
     function updateDashboard() {
       const now = new Date();
       const year = now.getFullYear();
@@ -673,7 +692,7 @@
       checkAlerts();
     }
 
-    // -------------------- LOG TRANSACTION (unchanged) --------------------
+    // -------------------- LOG TRANSACTION --------------------
     let selectedCategory = null;
     let amountString = '';
 
@@ -895,7 +914,7 @@
       }
     }
 
-    // -------------------- TRANSACTIONS LIST (unchanged) --------------------
+    // -------------------- TRANSACTIONS LIST --------------------
     function updateTransactions() {
       const container = $('#txList');
       const categoryFilter = $('#filterCategory').value;
@@ -974,7 +993,7 @@
       monthSelect.addEventListener('change', updateTransactions);
     }
 
-    // -------------------- REPORT (unchanged) --------------------
+    // -------------------- REPORT --------------------
     function setupReport() {
       const reportMonth = $('#reportMonth');
       reportMonth.value = currentMonth;
@@ -1017,7 +1036,7 @@
       });
     }
 
-    // -------------------- SAVINGS (unchanged) --------------------
+    // -------------------- SAVINGS --------------------
     function setupSavings() {
       $('#logSavingsBtn').addEventListener('click', async () => {
         const amount = parseFloat($('#savingsAmount').value);
@@ -1087,6 +1106,7 @@
       }
 
       drawSavingsChart();
+      updateStipendUI();
     }
 
     function drawSavingsChart() {
@@ -1135,7 +1155,85 @@
       setTimeout(() => el.style.display = 'none', 3000);
     }
 
-    // -------------------- ALERTS (unchanged) --------------------
+    // -------------------- STIPEND TRACKER (Change 1) --------------------
+    function setupStipend() {
+      updateStipendUI();
+      $('#markStipendBtn').addEventListener('click', markStipendReceived);
+    }
+
+    function updateStipendUI() {
+      const now = new Date();
+      const monthStr = now.toISOString().slice(0, 7);
+      const stipendTx = allTransactions.find(t =>
+        t.category === 'income_stipend' &&
+        t.date &&
+        t.date.startsWith(monthStr)
+      );
+      const statusEl = $('#stipendStatus');
+      const btn = $('#markStipendBtn');
+
+      if (stipendTx) {
+        statusEl.textContent = `300,000 UGX received this month ✅`;
+        statusEl.className = 'stipend-status sage';
+        btn.textContent = 'Stipend received this month ✅';
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.style.cursor = 'default';
+      } else {
+        statusEl.textContent = 'Not yet received ⏳';
+        statusEl.className = 'stipend-status amber';
+        btn.textContent = 'Mark Stipend as Received';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+      }
+    }
+
+    async function markStipendReceived() {
+      const now = new Date();
+      const monthStr = now.toISOString().slice(0, 7);
+      // Double-check no stipend this month
+      const existing = allTransactions.find(t =>
+        t.category === 'income_stipend' &&
+        t.date &&
+        t.date.startsWith(monthStr)
+      );
+      if (existing) {
+        updateStipendUI();
+        return;
+      }
+
+      const date = now.toISOString().slice(0, 10);
+      const txData = {
+        date: date,
+        amount: monthlyStipend,
+        type: 'income',
+        category: 'income_stipend',
+        account: 'cash',
+        note: 'Monthly stipend',
+      };
+
+      try {
+        const newTx = { id: Date.now().toString(), ...txData, created_at: new Date().toISOString() };
+        const { error } = await supabase.from('transactions').insert(newTx);
+        if (error) throw error;
+        allTransactions.unshift(newTx);
+        saveLocalData();
+        // Auto-save 25k to Sanlam
+        await logSavings(25000, 'deposit', 'regular', `Auto-save from stipend on ${date}`);
+        showAlert('Stipend logged and 25k saved to Sanlam ✅', 'success');
+        updateAllScreens();
+      } catch (e) {
+        console.warn('Stipend logging failed, saving locally', e);
+        const newTx = { id: Date.now().toString(), ...txData, created_at: new Date().toISOString() };
+        allTransactions.unshift(newTx);
+        saveLocalData();
+        await logSavings(25000, 'deposit', 'regular', `Auto-save from stipend on ${date}`);
+        updateAllScreens();
+      }
+    }
+
+    // -------------------- ALERTS --------------------
     function checkAlerts() {
       const container = $('#alertContainer');
       container.innerHTML = '';
@@ -1207,17 +1305,17 @@
       Notification.requestPermission();
     }
 
-    // -------------------- CALENDAR (NEW) --------------------
+    // -------------------- CALENDAR (shared) --------------------
     let calYear = new Date().getFullYear();
     let calMonth = new Date().getMonth();
     let selectedDate = null;
 
-    function renderCalendar(year, month) {
-      const grid = $('#calendarGrid');
+    function renderCalendar(year, month, gridId, monthYearId, dayContainerId, dayLabelId, dayCountId, dayListId) {
+      const grid = document.getElementById(gridId);
+      const monthYearEl = document.getElementById(monthYearId);
       const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-      $('#calMonthYear').textContent = `${monthNames[month]} ${year}`;
+      if (monthYearEl) monthYearEl.textContent = `${monthNames[month]} ${year}`;
 
-      // Weekday headers
       let html = '';
       const weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
       weekdays.forEach(w => { html += `<div style="font-weight:600; color:var(--text-muted); text-align:center; font-size:13px; padding:4px 0;">${w}</div>`; });
@@ -1239,7 +1337,7 @@
         if (hasTx) classes.push('has-tx');
         if (isToday) classes.push('today');
         html += `
-          <div class="${classes.join(' ')}" data-date="${dateStr}">
+          <div class="${classes.join(' ')}" data-date="${dateStr}" data-grid="${gridId}">
             ${dayCount}
             ${hasTx ? '<div class="dot"></div>' : ''}
           </div>
@@ -1253,28 +1351,27 @@
         if (el.dataset.date) {
           el.addEventListener('click', () => {
             selectedDate = el.dataset.date;
-            showDayTransactions(selectedDate);
+            showDayTransactions(selectedDate, dayContainerId, dayLabelId, dayCountId, dayListId, gridId);
           });
         }
       });
 
       if (selectedDate) {
-        showDayTransactions(selectedDate);
+        showDayTransactions(selectedDate, dayContainerId, dayLabelId, dayCountId, dayListId, gridId);
       } else {
-        // auto-select today if it exists in current month
         const today = new Date().toISOString().slice(0,10);
         if (today.startsWith(`${year}-${String(month+1).padStart(2,'0')}`)) {
           selectedDate = today;
-          showDayTransactions(today);
+          showDayTransactions(today, dayContainerId, dayLabelId, dayCountId, dayListId, gridId);
         }
       }
     }
 
-    function showDayTransactions(dateStr) {
-      const container = $('#dayTransactions');
-      const list = $('#dayTxList');
-      const label = $('#selectedDayLabel');
-      const count = $('#selectedDayCount');
+    function showDayTransactions(dateStr, containerId, labelId, countId, listId, gridId) {
+      const container = document.getElementById(containerId);
+      const list = document.getElementById(listId);
+      const label = document.getElementById(labelId);
+      const count = document.getElementById(countId);
 
       const txs = allTransactions.filter(t => t.date && t.date.startsWith(dateStr));
       if (txs.length === 0) {
@@ -1303,34 +1400,37 @@
         `;
       });
 
-      // Highlight selected day in grid
+      // Highlight selected day in all grids
       document.querySelectorAll('.cal-day').forEach(el => {
-        el.style.background = el.dataset.date === dateStr ? 'rgba(45,27,78,0.12)' : (el.classList.contains('has-tx') ? 'rgba(123,174,138,0.12)' : 'transparent');
-        el.style.fontWeight = el.dataset.date === dateStr ? '700' : (el.classList.contains('today') ? '700' : '400');
+        const isSelected = el.dataset.date === dateStr;
+        el.style.background = isSelected ? 'rgba(45,27,78,0.12)' : (el.classList.contains('has-tx') ? 'rgba(123,174,138,0.12)' : 'transparent');
+        el.style.fontWeight = isSelected ? '700' : (el.classList.contains('today') ? '700' : '400');
       });
     }
 
-    // Calendar navigation
-    $('#calPrev').addEventListener('click', () => {
-      calMonth--;
-      if (calMonth < 0) { calMonth = 11; calYear--; }
-      renderCalendar(calYear, calMonth);
-    });
-
-    $('#calNext').addEventListener('click', () => {
-      calMonth++;
-      if (calMonth > 11) { calMonth = 0; calYear++; }
-      renderCalendar(calYear, calMonth);
-    });
+    // Calendar navigation (both instances)
+    function setupCalendarNav(prevId, nextId, gridId, monthYearId, dayContainerId, dayLabelId, dayCountId, dayListId) {
+      document.getElementById(prevId).addEventListener('click', () => {
+        calMonth--;
+        if (calMonth < 0) { calMonth = 11; calYear--; }
+        renderCalendar(calYear, calMonth, gridId, monthYearId, dayContainerId, dayLabelId, dayCountId, dayListId);
+      });
+      document.getElementById(nextId).addEventListener('click', () => {
+        calMonth++;
+        if (calMonth > 11) { calMonth = 0; calYear++; }
+        renderCalendar(calYear, calMonth, gridId, monthYearId, dayContainerId, dayLabelId, dayCountId, dayListId);
+      });
+    }
 
     function updateCalendar() {
-      // Preserve current month if it matches today's month, otherwise reset to today
       const now = new Date();
       if (calYear !== now.getFullYear() || calMonth !== now.getMonth()) {
         calYear = now.getFullYear();
         calMonth = now.getMonth();
       }
-      renderCalendar(calYear, calMonth);
+      // Render both calendars
+      renderCalendar(calYear, calMonth, 'calendarGrid', 'calMonthYear', 'dayTransactions', 'selectedDayLabel', 'selectedDayCount', 'dayTxList');
+      renderCalendar(calYear, calMonth, 'calendarGridDash', 'calMonthYearDash', 'dayTransactionsDash', 'selectedDayLabelDash', 'selectedDayCountDash', 'dayTxListDash');
     }
 
     // -------------------- NAVIGATION --------------------
@@ -1345,6 +1445,10 @@
       fabLog.addEventListener('click', () => {
         switchScreen('log');
       });
+
+      // Calendar nav (both)
+      setupCalendarNav('calPrev', 'calNext', 'calendarGrid', 'calMonthYear', 'dayTransactions', 'selectedDayLabel', 'selectedDayCount', 'dayTxList');
+      setupCalendarNav('calPrevDash', 'calNextDash', 'calendarGridDash', 'calMonthYearDash', 'dayTransactionsDash', 'selectedDayLabelDash', 'selectedDayCountDash', 'dayTxListDash');
     }
 
     function switchScreen(screenId) {
@@ -1355,7 +1459,7 @@
       });
       if (screenId === 'transactions') updateTransactions();
       if (screenId === 'report') updateReport();
-      if (screenId === 'savings') updateSavingsUI();
+      if (screenId === 'savings') { updateSavingsUI(); updateStipendUI(); }
       if (screenId === 'dashboard') updateDashboard();
       if (screenId === 'calendar') updateCalendar();
     }
@@ -1379,9 +1483,10 @@
       updateReport,
       updateSavingsUI,
       updateCalendar,
+      updateStipendUI,
     };
 
-    console.log('EaseSave loaded with Calendar.');
+    console.log('EaseSave loaded with Stipend Tracker and Calendar on Dashboard.');
   </script>
 </body>
 </html>
