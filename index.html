@@ -13,9 +13,7 @@
     /* ============================================================
        EASESAVE — DARK BLUE / GREEN GRADIENT THEME
        ============================================================ */
-
     * { margin:0; padding:0; box-sizing:border-box; }
-
     body {
       font-family:'DM Sans',sans-serif;
       background: linear-gradient(145deg, #0a1628 0%, #0d2a1a 100%);
@@ -25,9 +23,7 @@
       flex-direction:column;
       -webkit-font-smoothing: antialiased;
     }
-
     .mono { font-family:'DM Mono',monospace; font-weight:500; font-variant-numeric: tabular-nums; }
-
     :root {
       --bg-primary: #0a1628;
       --bg-card: rgba(22, 27, 34, 0.85);
@@ -55,7 +51,6 @@
       --shadow-card: 0 8px 24px rgba(0,0,0,0.5);
       --shadow-lift: 0 12px 32px rgba(0,0,0,0.6);
     }
-
     ::-webkit-scrollbar { width:4px; height:4px; }
     ::-webkit-scrollbar-track { background: var(--bg-primary); }
     ::-webkit-scrollbar-thumb { background: var(--plum); border-radius:10px; }
@@ -82,7 +77,7 @@
       backdrop-filter: blur(16px);
       border-radius: var(--radius);
       padding: 32px 28px;
-      max-width: 380px;
+      max-width: 400px;
       width: 100%;
       border: 1px solid var(--border-soft);
       box-shadow: var(--shadow-lift);
@@ -107,7 +102,7 @@
     }
     .login-box .auth-input {
       margin-bottom: 12px;
-      text-align: center;
+      text-align: left;
     }
     .login-box .btn-primary {
       margin-top: 8px;
@@ -125,6 +120,23 @@
     .login-status.error { color: var(--soft-red); }
     .login-status.loading { color: var(--amber); }
 
+    .btn-primary {
+      background:linear-gradient(135deg, var(--plum), var(--plum-dark));
+      color:white; border:none; padding:15px 20px; border-radius:16px;
+      font-weight:700; font-size:15.5px; width:100%; cursor:pointer;
+      transition: all 0.2s ease; box-shadow:0 6px 20px rgba(124,92,191,0.25);
+      letter-spacing:0.2px;
+    }
+    .btn-primary:active { transform:scale(0.98); box-shadow:0 3px 12px rgba(124,92,191,0.15); }
+    .btn-primary:disabled { opacity:0.4; cursor:not-allowed; box-shadow:none; }
+    .btn-outline {
+      background:transparent; border:2px solid var(--plum); color:var(--plum);
+      padding:12px 20px; border-radius:16px; font-weight:700; width:100%; cursor:pointer;
+      transition: background 0.2s ease;
+    }
+    .btn-outline:active { background:rgba(124,92,191,0.08); }
+    .btn-outline.password-btn { border-color: var(--sage); color: var(--sage); }
+
     /* ===== APP SHELL ===== */
     #appShell {
       display: none;
@@ -136,7 +148,7 @@
       display: flex;
     }
 
-    /* ===== Existing styles (copied from your original) ===== */
+    /* ===== Existing app styles (copied from your original) ===== */
     .screen { display:none; flex:1; padding:18px 16px 24px; animation:fadeIn 0.3s ease; }
     .screen.active { display:block; }
     @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
@@ -268,7 +280,7 @@
     .num-pad .clear-btn:active { background:rgba(224,92,92,0.2); }
     .num-pad .submit-btn { background:linear-gradient(135deg, var(--plum), var(--plum-dark)); color:white; font-size:18px; box-shadow:0 4px 16px rgba(124,92,191,0.3); }
 
-    .auth-input, input[type="text"], input[type="number"], input[type="date"], input[type="month"], select {
+    .auth-input, input[type="text"], input[type="password"], input[type="number"], input[type="date"], input[type="month"], select {
       width:100%;
       padding:13px 16px;
       border-radius:13px;
@@ -344,22 +356,6 @@
     .text-center { text-align:center; }
     .w-full { width:100%; }
 
-    .btn-primary {
-      background:linear-gradient(135deg, var(--plum), var(--plum-dark));
-      color:white; border:none; padding:15px 20px; border-radius:16px;
-      font-weight:700; font-size:15.5px; width:100%; cursor:pointer;
-      transition: all 0.2s ease; box-shadow:0 6px 20px rgba(124,92,191,0.25);
-      letter-spacing:0.2px;
-    }
-    .btn-primary:active { transform:scale(0.98); box-shadow:0 3px 12px rgba(124,92,191,0.15); }
-    .btn-primary:disabled { opacity:0.4; cursor:not-allowed; box-shadow:none; }
-    .btn-outline {
-      background:transparent; border:2px solid var(--plum); color:var(--plum);
-      padding:12px 20px; border-radius:16px; font-weight:700; width:100%; cursor:pointer;
-      transition: background 0.2s ease;
-    }
-    .btn-outline:active { background:rgba(124,92,191,0.08); }
-
     .dashboard-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
     .dashboard-header h1 { font-size:25px; font-weight:800; color:var(--text-primary); letter-spacing:-0.3px; }
 
@@ -416,6 +412,11 @@
     .scrollable { max-height:400px; overflow-y:auto; padding-right:4px; }
     .scrollable::-webkit-scrollbar { width:3px; }
     .scrollable::-webkit-scrollbar-thumb { background:var(--plum); border-radius:10px; }
+
+    /* Responsive tweaks for login screen */
+    @media (max-width: 480px) {
+      .login-box { padding: 24px 16px; }
+    }
   </style>
 </head>
 <body>
@@ -425,14 +426,16 @@
   <div class="login-box">
     <span class="fingerprint-icon"><i class="fas fa-fingerprint"></i></span>
     <h1>EaseSave</h1>
-    <p class="sub">Secure your finances with fingerprint</p>
+    <p class="sub">Secure your finances with fingerprint or password</p>
 
-    <input type="text" id="loginUsername" class="auth-input" placeholder="Username (e.g. john)" autocomplete="username" />
-    
-    <button id="loginRegisterBtn" class="btn-primary">Register Fingerprint</button>
+    <input type="text" id="loginUsername" class="auth-input" placeholder="Username" autocomplete="username" />
+    <input type="password" id="loginPassword" class="auth-input" placeholder="Password (for fallback)" autocomplete="current-password" />
+
+    <button id="loginRegisterBtn" class="btn-primary">Register (fingerprint + password)</button>
     <button id="loginAuthBtn" class="btn-outline">Login with Fingerprint</button>
+    <button id="loginPasswordBtn" class="btn-outline password-btn">Login with Password</button>
 
-    <div id="loginStatus" class="login-status">Enter username, then register or login.</div>
+    <div id="loginStatus" class="login-status">Enter username & password, then register or login.</div>
   </div>
 </div>
 
@@ -616,9 +619,8 @@
 
 <!-- ==================== JAVASCRIPT ==================== -->
 <script>
-  // -------------------- FINGERPRINT AUTH (WebAuthn) --------------------
+  // -------------------- FINGERPRINT + PASSWORD AUTH --------------------
   (function() {
-    // Store credential info in localStorage
     const STORAGE_KEY = 'easesave_webauthn';
 
     function getCredentialData() {
@@ -631,12 +633,10 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
 
-    // Helper: Convert ArrayBuffer to base64
+    // Helpers for ArrayBuffer <-> base64
     function bufferToBase64(buffer) {
       return btoa(String.fromCharCode(...new Uint8Array(buffer)));
     }
-
-    // Helper: Convert base64 to ArrayBuffer
     function base64ToBuffer(base64) {
       const binary = atob(base64);
       const bytes = new Uint8Array(binary.length);
@@ -646,17 +646,25 @@
       return bytes.buffer;
     }
 
-    // Generate a random challenge (32 bytes)
+    // Generate random challenge (32 bytes)
     function generateChallenge() {
       const bytes = new Uint8Array(32);
       window.crypto.getRandomValues(bytes);
       return bytes;
     }
 
-    // Register a new credential
-    async function registerFingerprint(username) {
-      if (!username || username.trim() === '') {
-        setLoginStatus('Please enter a username.', 'error');
+    // Simple SHA-256 hash for password (async)
+    async function hashPassword(password) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      return bufferToBase64(hashBuffer);
+    }
+
+    // Registration
+    async function registerFingerprint(username, password) {
+      if (!username || !password) {
+        setLoginStatus('Please enter username and password.', 'error');
         return;
       }
       username = username.trim();
@@ -684,9 +692,9 @@
           { alg: -257, type: 'public-key' } // RS256
         ],
         authenticatorSelection: {
-          authenticatorAttachment: 'platform', // force built-in (fingerprint)
+          // Remove 'platform' to allow PIN/security key on PCs
           userVerification: 'required',
-          residentKey: 'preferred',
+          residentKey: 'required', // store credential on device
         },
         timeout: 60000,
         attestation: 'none',
@@ -695,18 +703,16 @@
       try {
         const credential = await navigator.credentials.create({ publicKey });
 
-        // Store credential data
+        // Hash password and store all data
+        const passwordHash = await hashPassword(password);
         const credData = {
           username: username,
           credentialId: bufferToBase64(credential.id ? new TextEncoder().encode(credential.id) : credential.rawId),
           publicKey: bufferToBase64(credential.response.getPublicKey ? credential.response.getPublicKey() : new Uint8Array(0)),
-          // We also store a static challenge for login (for simplicity, we'll use a fixed challenge).
-          // In real app, you'd generate a new challenge per login.
+          passwordHash: passwordHash,
         };
         saveCredentialData(credData);
         setLoginStatus(`✅ Registered ${username} successfully! You can now login.`, 'success');
-        // Auto-login after registration?
-        // We'll let user click Login button.
       } catch (err) {
         console.error('Registration error:', err);
         setLoginStatus('❌ Registration failed: ' + (err.message || 'Unknown error'), 'error');
@@ -715,19 +721,17 @@
 
     // Login with fingerprint
     async function loginFingerprint(username) {
-      if (!username || username.trim() === '') {
+      if (!username) {
         setLoginStatus('Please enter your username.', 'error');
         return;
       }
       username = username.trim();
-
       const credData = getCredentialData();
       if (!credData || credData.username !== username) {
         setLoginStatus('❌ No registered fingerprint for this username.', 'error');
         return;
       }
 
-      // Reconstruct credential ID as ArrayBuffer
       const credentialIdBuffer = base64ToBuffer(credData.credentialId);
       const challenge = generateChallenge();
 
@@ -743,11 +747,8 @@
 
       try {
         const assertion = await navigator.credentials.get({ publicKey });
-        // For a real app, you'd verify the signature on server.
-        // For this demo, we just check if we got a valid assertion.
         if (assertion && assertion.response) {
           setLoginStatus(`✅ Login successful! Welcome ${username}.`, 'success');
-          // Hide login, show app
           showApp();
         } else {
           setLoginStatus('❌ Login failed: invalid response.', 'error');
@@ -758,12 +759,35 @@
       }
     }
 
-    // UI helpers for login screen
+    // Login with password
+    async function loginWithPassword(username, password) {
+      if (!username || !password) {
+        setLoginStatus('Please enter username and password.', 'error');
+        return;
+      }
+      username = username.trim();
+      const credData = getCredentialData();
+      if (!credData || credData.username !== username) {
+        setLoginStatus('❌ No account found for this username.', 'error');
+        return;
+      }
+      const hashedInput = await hashPassword(password);
+      if (credData.passwordHash !== hashedInput) {
+        setLoginStatus('❌ Incorrect password.', 'error');
+        return;
+      }
+      setLoginStatus(`✅ Login successful! Welcome ${username}.`, 'success');
+      showApp();
+    }
+
+    // UI helpers
     const loginScreen = document.getElementById('loginScreen');
     const loginStatus = document.getElementById('loginStatus');
     const loginUsername = document.getElementById('loginUsername');
+    const loginPassword = document.getElementById('loginPassword');
     const loginRegisterBtn = document.getElementById('loginRegisterBtn');
     const loginAuthBtn = document.getElementById('loginAuthBtn');
+    const loginPasswordBtn = document.getElementById('loginPasswordBtn');
 
     function setLoginStatus(msg, type = 'info') {
       loginStatus.textContent = msg;
@@ -773,25 +797,21 @@
       else if (type === 'loading') loginStatus.classList.add('loading');
     }
 
-    // Show app and hide login
     function showApp() {
       loginScreen.classList.add('hidden');
       document.getElementById('appShell').classList.add('visible');
-      // Initialize app if not already done
       if (!window._appInitialized) {
         initApp();
         window._appInitialized = true;
       }
-      // Switch to dashboard
       switchScreen('dashboard');
     }
-
-    // Check if user already logged in? We'll just show login always.
 
     // Event listeners
     loginRegisterBtn.addEventListener('click', () => {
       const username = loginUsername.value.trim();
-      registerFingerprint(username);
+      const password = loginPassword.value.trim();
+      registerFingerprint(username, password);
     });
 
     loginAuthBtn.addEventListener('click', () => {
@@ -799,19 +819,25 @@
       loginFingerprint(username);
     });
 
-    // Allow Enter key on username field to trigger login
-    loginUsername.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        loginAuthBtn.click();
-      }
+    loginPasswordBtn.addEventListener('click', () => {
+      const username = loginUsername.value.trim();
+      const password = loginPassword.value.trim();
+      loginWithPassword(username, password);
     });
 
-    // Expose functions globally for debugging
-    window.__webauthn = { registerFingerprint, loginFingerprint, getCredentialData };
+    loginUsername.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') loginPassword.focus();
+    });
+    loginPassword.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') loginRegisterBtn.click();
+    });
+
+    // Expose for debugging
+    window.__webauthn = { registerFingerprint, loginFingerprint, loginWithPassword, getCredentialData };
   })();
 
   // ============================================================
-  // YOUR ORIGINAL APP CODE (with minor adjustments)
+  // YOUR ORIGINAL APP CODE (unchanged, except init is now called after login)
   // ============================================================
 
   // -------------------- STATE --------------------
@@ -943,7 +969,6 @@
   function seedSampleData() {
     const now = new Date();
     const today = now.toISOString().slice(0, 10);
-    const month = now.toISOString().slice(0, 7);
     const yesterday = new Date(now);
     yesterday.setDate(now.getDate() - 1);
     const yestStr = yesterday.toISOString().slice(0, 10);
@@ -1785,10 +1810,10 @@
       if (confirm('Logout?')) {
         document.getElementById('appShell').classList.remove('visible');
         document.getElementById('loginScreen').classList.remove('hidden');
-        // Reset login status
-        document.getElementById('loginStatus').textContent = 'Enter username, then register or login.';
+        document.getElementById('loginStatus').textContent = 'Enter username & password, then register or login.';
         document.getElementById('loginStatus').className = 'login-status';
         document.getElementById('loginUsername').value = '';
+        document.getElementById('loginPassword').value = '';
       }
     });
   }
@@ -1848,8 +1873,7 @@
     };
   }
 
-  // The app will be initialized when user logs in.
-  console.log('EaseSave loaded with fingerprint login.');
+  console.log('EaseSave loaded with fingerprint + password login.');
 </script>
 </body>
 </html>
