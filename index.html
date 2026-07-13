@@ -383,8 +383,8 @@
 
     <div class="card" style="text-align:center;">
       <div style="position:relative; display:inline-block;">
-        <canvas id="pulseCanvas" width="140" height="140"></canvas>
-        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-family:'DM Mono',monospace; font-size:24px; font-weight:500;"><span id="dialPercent">0%</span></div>
+        <canvas id="pulseCanvas" width="150" height="150"></canvas>
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-family:'DM Mono',monospace; font-size:24px; font-weight:500; pointer-events:none;"><span id="dialPercent">0%</span></div>
       </div>
       <div class="dial-label"><span class="dial-value" id="remainingBudget">0</span> UGX left this month</div>
       <div class="text-muted" style="font-size:13px; margin-top:4px;"><span id="daysLeft">0</span> days left · burn rate: <span id="burnRate">0</span> UGX/day</div>
@@ -551,6 +551,8 @@
   let monthlyStipend = 300000;
   let monthlyBudget = 300000;
   let editingTxId = null;
+  let currentAnimatedPercent = 0;
+  let dialAnimationId = null;
 
   const CATEGORIES = [
     { id: 'breakfast', label: 'Breakfast', icon: 'fa-egg', type: 'expense' },
@@ -728,7 +730,116 @@
     computeBalances();
   }
 
-  // -------------------- DASHBOARD --------------------
+  // -------------------- DASHBOARD & DIAL ANIMATION --------------------
+  function animateDial(targetPercent) {
+    if (dialAnimationId) cancelAnimationFrame(dialAnimationId);
+    const startPercent = currentAnimatedPercent;
+    const duration = 600;
+    const startTime = performance.now();
+
+    function step(time) {
+      const elapsed = time - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const currentPercent = startPercent + (targetPercent - startPercent) * eased;
+      drawDial(currentPercent);
+      if (progress < 1) {
+        dialAnimationId = requestAnimationFrame(step);
+      } else {
+        currentAnimatedPercent = targetPercent;
+        dialAnimationId = null;
+      }
+    }
+    dialAnimationId = requestAnimationFrame(step);
+  }
+
+  function drawDial(percent) {
+    const canvas = $('#pulseCanvas');
+    const ctx = canvas.getContext('2d');
+    const w = 150, h = 150;
+    const cx = w / 2, cy = h / 2;
+    const radius = 56;
+    const lineWidth = 14;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Background ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#1A2A2A';
+    ctx.lineWidth = lineWidth;
+    ctx.shadowColor = 'transparent';
+    ctx.stroke();
+
+    // Determine arc color
+    let color1, color2;
+    if (percent < 70) {
+      color1 = '#5BA87A';
+      color2 = '#3d7a55';
+    } else if (percent < 90) {
+      color1 = '#F5A623';
+      color2 = '#c98a1a';
+    } else {
+      color1 = '#E05C5C';
+      color2 = '#b84444';
+    }
+
+    const startAngle = -Math.PI / 2;
+    const endAngle = startAngle + (percent / 100) * 2 * Math.PI;
+
+    // Gradient for the arc
+    const gradient = ctx.createLinearGradient(
+      cx + radius * Math.cos(startAngle),
+      cy + radius * Math.sin(startAngle),
+      cx + radius * Math.cos(endAngle),
+      cy + radius * Math.sin(endAngle)
+    );
+    gradient.addColorStop(0, color1);
+    gradient.addColorStop(1, color2);
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, startAngle, endAngle);
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = 'round';
+    ctx.shadowColor = color1;
+    ctx.shadowBlur = 16;
+    ctx.stroke();
+
+    // Dot at tip
+    if (percent > 0) {
+      const tipAngle = endAngle;
+      const tipX = cx + radius * Math.cos(tipAngle);
+      const tipY = cy + radius * Math.sin(tipAngle);
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, 6, 0, 2 * Math.PI);
+      ctx.fillStyle = color1;
+      ctx.shadowColor = color1;
+      ctx.shadowBlur = 14;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // Percentage text
+    ctx.shadowBlur = 0;
+    ctx.font = '600 24px "DM Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0,0,0,0.4)';
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = '#E6EDF3';
+    ctx.fillText(Math.round(percent) + '%', cx, cy - 2);
+    ctx.shadowBlur = 0;
+
+    // "spent" label
+    ctx.font = '11px "DM Sans", sans-serif';
+    ctx.fillStyle = '#8B949E';
+    ctx.fillText('spent', cx, cy + 22);
+
+    // Update the percent text in the HTML overlay as well
+    $('#dialPercent').textContent = Math.round(percent) + '%';
+  }
+
   function updateDashboard() {
     const now = new Date();
     const year = now.getFullYear();
@@ -748,34 +859,18 @@
     const totalExpenses = monthTxs.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
     const budget = monthlyBudget;
     const remaining = Math.max(0, budget - totalExpenses);
-    const percent = Math.min(100, (totalExpenses / budget) * 100);
+    const targetPercent = Math.min(100, (totalExpenses / budget) * 100);
 
-    const canvas = $('#pulseCanvas');
-    const ctx = canvas.getContext('2d');
-    const w = 140, h = 140;
-    ctx.clearRect(0, 0, w, h);
-    const cx = w / 2, cy = h / 2, r = 56, lineWidth = 12;
-    const startAngle = -Math.PI / 2;
-    const endAngle = startAngle + (percent / 100) * 2 * Math.PI;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
-    ctx.strokeStyle = '#1A2A2A';
-    ctx.lineWidth = lineWidth;
-    ctx.stroke();
-    const color = percent < 70 ? '#5BA87A' : (percent < 90 ? '#F5A623' : '#E05C5C');
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, startAngle, Math.min(endAngle, startAngle + 2 * Math.PI));
-    ctx.strokeStyle = color;
-    ctx.lineWidth = lineWidth;
-    ctx.lineCap = 'round';
-    ctx.stroke();
-
-    $('#dialPercent').textContent = Math.round(percent) + '%';
+    // Update texts
     $('#remainingBudget').textContent = formatMoney(remaining);
     $('#daysLeft').textContent = daysLeft;
     const burnRate = daysLeft > 0 ? Math.round(remaining / daysLeft) : 0;
     $('#burnRate').textContent = formatMoney(burnRate);
 
+    // Animate dial
+    animateDial(targetPercent);
+
+    // Sanlam
     const monthSavings = allSavings.filter(s => s.date && s.date.startsWith(monthStr) && s.direction === 'deposit')
       .reduce((sum, s) => sum + s.amount, 0);
     $('#sanlamBalance').textContent = formatMoney(sanlamBalance);
@@ -783,12 +878,14 @@
     const savePercent = Math.min(100, (monthSavings / 25000) * 100);
     $('#sanlamProgress').style.width = savePercent + '%';
 
+    // Emergency
     const emgGoal = 100000;
     const emgPercent = Math.min(100, (emergencyBalance / emgGoal) * 100);
     $('#emergencyBalance').textContent = formatMoney(emergencyBalance);
     $('#emergencyPercent').textContent = Math.round(emgPercent) + '%';
     $('#emergencyProgress').style.width = emgPercent + '%';
 
+    // Category bars
     const container = $('#categoryBars');
     container.innerHTML = '';
     EXPENSE_CATEGORIES.forEach(cat => {
@@ -808,6 +905,7 @@
         `;
     });
 
+    // Recent transactions
     const recent = allTransactions.slice(0, 3);
     const recentContainer = $('#recentTxs');
     recentContainer.innerHTML = '';
@@ -1564,7 +1662,7 @@
     updateBudgetUI,
   };
 
-  console.log('EaseSave loaded with dark blue/green gradient theme and budget setting.');
+  console.log('EaseSave loaded with animated dial, dark blue/green theme, and budget setting.');
 </script>
 </body>
 </html>
