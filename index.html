@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#0D1117" />
+  <meta name="theme-color" content="#0a1628" />
   <title>EaseSave</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" /> 
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -11,14 +11,14 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <style>
     /* ============================================================
-       EASESAVE — DARK PROFESSIONAL THEME
+       EASESAVE — DARK BLUE / GREEN GRADIENT THEME
        ============================================================ */
 
     * { margin:0; padding:0; box-sizing:border-box; }
 
     body {
       font-family:'DM Sans',sans-serif;
-      background: #0D1117;
+      background: linear-gradient(145deg, #0a1628 0%, #0d2a1a 100%);
       color: #E6EDF3;
       padding-bottom:88px;
       min-height:100vh;
@@ -30,12 +30,12 @@
     .mono { font-family:'DM Mono',monospace; font-weight:500; font-variant-numeric: tabular-nums; }
 
     :root {
-      --bg-primary: #0D1117;
-      --bg-card: #161B22;
+      --bg-primary: #0a1628;
+      --bg-card: rgba(22, 27, 34, 0.85);
       --bg-card-hover: #1C2333;
-      --bg-input: #0D1117;
-      --bg-input-hover: #1A2128;
-      --border-soft: #30363D;
+      --bg-input: #0D1A2B;
+      --bg-input-hover: #1A2A3A;
+      --border-soft: #2A3A3A;
       --text-primary: #E6EDF3;
       --text-secondary: #8B949E;
       --text-muted: #6E7681;
@@ -53,8 +53,8 @@
       --soft-red-glow: rgba(224, 92, 92, 0.15);
       --radius:16px;
       --radius-sm:10px;
-      --shadow-card: 0 8px 24px rgba(0,0,0,0.4);
-      --shadow-lift: 0 12px 32px rgba(0,0,0,0.5);
+      --shadow-card: 0 8px 24px rgba(0,0,0,0.5);
+      --shadow-lift: 0 12px 32px rgba(0,0,0,0.6);
     }
 
     ::-webkit-scrollbar { width:4px; height:4px; }
@@ -68,7 +68,7 @@
     /* ─── Bottom Navigation ─── */
     .bottom-nav {
       position:fixed; bottom:0; left:0; right:0;
-      background: rgba(22, 27, 34, 0.92);
+      background: rgba(10, 22, 40, 0.92);
       backdrop-filter: blur(16px);
       display:flex; justify-content:space-around; align-items:center;
       padding:10px 0 14px;
@@ -103,14 +103,15 @@
     /* ─── Cards ─── */
     .card {
       background: var(--bg-card);
+      backdrop-filter: blur(8px);
       border-radius:var(--radius);
       padding:20px 18px;
       margin-bottom:16px;
-      border: 1px solid var(--border-soft);
+      border: 1px solid rgba(42, 58, 58, 0.6);
       box-shadow: var(--shadow-card);
       transition: box-shadow 0.25s ease, border-color 0.25s ease;
     }
-    .card:hover { border-color: rgba(124,92,191,0.2); }
+    .card:hover { border-color: rgba(124,92,191,0.25); }
     .card-title {
       font-weight:700; font-size:12px; color:var(--text-secondary);
       margin-bottom:12px; letter-spacing:0.8px; text-transform: uppercase;
@@ -125,7 +126,7 @@
 
     /* ─── Progress Bars ─── */
     .progress-bar {
-      height:8px; background:#21262D; border-radius:20px; overflow:hidden;
+      height:8px; background:#1A2A2A; border-radius:20px; overflow:hidden;
       margin-top:8px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
     }
     .progress-fill {
@@ -146,7 +147,7 @@
     .category-chip {
       display:flex; flex-direction:column; align-items:center;
       padding:14px 4px; border-radius:14px;
-      background:#1A2128; border:2px solid transparent;
+      background:#1A2A2A; border:2px solid transparent;
       transition: all 0.18s cubic-bezier(.34,1.56,.64,1);
       cursor:pointer; font-size:11.5px; font-weight:600; color:var(--text-secondary);
     }
@@ -164,7 +165,7 @@
     .category-chip.income.selected i { color:var(--sage); }
 
     /* ─── Transaction Items ─── */
-    .tx-item { display:flex; align-items:center; padding:12px 0; border-bottom:1px solid #21262D; }
+    .tx-item { display:flex; align-items:center; padding:12px 0; border-bottom:1px solid #1A2A2A; }
     .tx-item:last-child { border-bottom:none; }
     .tx-icon {
       width:40px; height:40px; border-radius:12px;
@@ -180,10 +181,10 @@
     .tx-amount.expense { color:var(--soft-red); }
     .tx-actions { display:flex; gap:4px; margin-left:8px; }
     .tx-actions button {
-      background:#1A2128; border:none; cursor:pointer; font-size:13px; padding:7px 9px;
+      background:#1A2A2A; border:none; cursor:pointer; font-size:13px; padding:7px 9px;
       border-radius:9px; transition: background 0.15s ease; color:var(--text-secondary);
     }
-    .tx-actions button:active { background:#21262D; }
+    .tx-actions button:active { background:#1A3A3A; }
     .tx-actions .edit-btn:hover { color:var(--plum); }
     .tx-actions .delete-btn:hover { color:var(--soft-red); }
 
@@ -191,10 +192,10 @@
     .num-pad { display:grid; grid-template-columns:repeat(4,1fr); gap:9px; margin-top:14px; }
     .num-pad button {
       padding:16px 0; font-size:21px; font-family:'DM Mono',monospace; font-weight:600;
-      background:#1A2128; border:none; border-radius:14px; cursor:pointer;
+      background:#1A2A2A; border:none; border-radius:14px; cursor:pointer;
       transition: all 0.1s ease; color:var(--text-primary);
     }
-    .num-pad button:active { background:#21262D; transform:scale(0.95); }
+    .num-pad button:active { background:#1A3A3A; transform:scale(0.95); }
     .num-pad .clear-btn { background:rgba(224,92,92,0.12); color:var(--soft-red); }
     .num-pad .clear-btn:active { background:rgba(224,92,92,0.2); }
     .num-pad .submit-btn { background:linear-gradient(135deg, var(--plum), var(--plum-dark)); color:white; font-size:18px; box-shadow:0 4px 16px rgba(124,92,191,0.3); }
@@ -227,7 +228,7 @@
       padding-right:38px;
       cursor:pointer;
     }
-    select option { background:#0D1117; color:var(--text-primary); }
+    select option { background:#0D1A2B; color:var(--text-primary); }
 
     #amountInput {
       font-size:30px !important;
@@ -253,12 +254,12 @@
       text-align:left; color:var(--text-secondary); font-weight:700; text-transform:uppercase;
       font-size:11px; letter-spacing:0.4px; padding-bottom:10px; border-bottom:2px solid var(--border-soft);
     }
-    .report-table td { padding:11px 0; border-bottom:1px solid #21262D; font-weight:500; color:var(--text-primary); }
+    .report-table td { padding:11px 0; border-bottom:1px solid #1A2A2A; font-weight:500; color:var(--text-primary); }
     .report-table .variance-positive { color:var(--sage); font-weight:700; }
     .report-table .variance-negative { color:var(--soft-red); font-weight:700; }
 
     /* ─── Savings ─── */
-    .savings-item { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #21262D; font-size:14px; color:var(--text-primary); }
+    .savings-item { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #1A2A2A; font-size:14px; color:var(--text-primary); }
     .savings-item .dir-deposit { color:var(--sage); font-weight:700; }
     .savings-item .dir-withdrawal { color:var(--soft-red); font-weight:700; }
 
@@ -302,7 +303,7 @@
 
     /* ─── Date Display ─── */
     .date-display {
-      background:linear-gradient(135deg, #1A2128, #21262D);
+      background:linear-gradient(135deg, #0D1A2B, #1A2A2A);
       border:1px solid var(--border-soft);
       border-radius:var(--radius);
       padding:20px 22px;
@@ -758,7 +759,7 @@
     const endAngle = startAngle + (percent / 100) * 2 * Math.PI;
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, 2 * Math.PI);
-    ctx.strokeStyle = '#21262D';
+    ctx.strokeStyle = '#1A2A2A';
     ctx.lineWidth = lineWidth;
     ctx.stroke();
     const color = percent < 70 ? '#5BA87A' : (percent < 90 ? '#F5A623' : '#E05C5C');
@@ -1563,7 +1564,7 @@
     updateBudgetUI,
   };
 
-  console.log('EaseSave loaded with dark theme and budget setting.');
+  console.log('EaseSave loaded with dark blue/green gradient theme and budget setting.');
 </script>
 </body>
 </html>
