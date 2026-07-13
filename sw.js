@@ -15,20 +15,15 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('📦 Cache opened, adding files...');
-        return cache.addAll(urlsToCache)
-          .then(() => {
-            console.log('✅ All files cached successfully');
-          })
-          .catch(err => {
-            console.error('❌ Failed to cache files:', err);
-          });
+        return cache.addAll(urlsToCache);
       })
       .then(() => {
-        console.log('✅ Service Worker installed');
+        console.log('✅ All files cached successfully');
         return self.skipWaiting();
       })
       .catch(err => {
         console.error('❌ Installation failed:', err);
+        throw err; // fail installation if caching fails
       })
   );
 });
@@ -63,32 +58,41 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
-  
-  // Skip requests that are not http/https (like chrome-extension, moz-extension, etc.)
+
+  // Only handle HTTP/HTTPS requests
   if (!url.protocol.startsWith('http')) {
-    console.log('⏭️ Skipping non-http request:', url.protocol);
-    // Just fetch normally without caching
+    console.log('⏭️ Skipping non‑http request:', url.protocol);
     event.respondWith(fetch(event.request));
     return;
   }
 
-  // Log only non-static requests to avoid spam (optional)
-  if (!url.pathname.includes('.js') && !url.pathname.includes('.css') && !url.pathname.includes('.png')) {
+  // Only cache GET requests
+  if (event.request.method !== 'GET') {
+    console.log(`⏭️ Skipping non‑GET request: ${event.request.method}`);
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Optional: reduce logging for static assets
+  const isStatic = url.pathname.match(/\.(js|css|png|jpg|jpeg|svg|ico)$/);
+  if (!isStatic) {
     console.log(`🌐 Fetching: ${event.request.url}`);
   }
-  
+
   event.respondWith(
     caches.match(event.request)
       .then(cachedResponse => {
         if (cachedResponse) {
-          // console.log('✅ Cache hit:', event.request.url);
           return cachedResponse;
         }
-        // console.log('🌐 Network fetch:', event.request.url);
+
         return fetch(event.request)
           .then(networkResponse => {
-            // Check if we got a valid response and it's a basic type (not opaque)
-            if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+            if (
+              networkResponse &&
+              networkResponse.status === 200 &&
+              networkResponse.type === 'basic'
+            ) {
               const responseToCache = networkResponse.clone();
               caches.open(CACHE_NAME).then(cache => {
                 cache.put(event.request, responseToCache);
@@ -98,7 +102,7 @@ self.addEventListener('fetch', event => {
           })
           .catch(err => {
             console.warn('⚠️ Network fetch failed, returning offline fallback:', err);
-            return new Response('You are offline', { 
+            return new Response('You are offline', {
               status: 503,
               headers: { 'Content-Type': 'text/plain' }
             });
