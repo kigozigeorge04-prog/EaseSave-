@@ -620,222 +620,247 @@
 <!-- ==================== JAVASCRIPT ==================== -->
 <script>
   // -------------------- FINGERPRINT + PASSWORD AUTH --------------------
-  (function() {
-    const STORAGE_KEY = 'easesave_webauthn';
+// -------------------- FINGERPRINT + PASSWORD AUTH (RELIABLE VERSION) --------------------
+(function() {
+  const STORAGE_KEY = 'easesave_webauthn';
 
-    function getCredentialData() {
-      try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY));
-      } catch { return null; }
+  function getCredentialData() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  }
+
+  function saveCredentialData(data) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    console.log('✅ Saved credential data:', data);
+  }
+
+  // Convert ArrayBuffer to base64 (works reliably)
+  function bufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  }
+
+  // Convert base64 to ArrayBuffer
+  function base64ToBuffer(base64) {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
+  // Generate random challenge (32 bytes)
+  function generateChallenge() {
+    const bytes = new Uint8Array(32);
+    window.crypto.getRandomValues(bytes);
+    return bytes;
+  }
+
+  // Simple SHA-256 hash for password
+  async function hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    return bufferToBase64(hashBuffer);
+  }
+
+  // REGISTRATION
+  async function registerFingerprint(username, password) {
+    if (!username || !password) {
+      setLoginStatus('Please enter username and password.', 'error');
+      return;
+    }
+    username = username.trim();
+
+    // Check if already registered
+    const existing = getCredentialData();
+    if (existing && existing.username === username) {
+      setLoginStatus('Username already registered. Try logging in.', 'error');
+      return;
     }
 
-    function saveCredentialData(data) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    }
+    const challenge = generateChallenge();
+    const userId = new TextEncoder().encode(username);
 
-    // Helpers for ArrayBuffer <-> base64
-    function bufferToBase64(buffer) {
-      return btoa(String.fromCharCode(...new Uint8Array(buffer)));
-    }
-    function base64ToBuffer(base64) {
-      const binary = atob(base64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-      }
-      return bytes.buffer;
-    }
-
-    // Generate random challenge (32 bytes)
-    function generateChallenge() {
-      const bytes = new Uint8Array(32);
-      window.crypto.getRandomValues(bytes);
-      return bytes;
-    }
-
-    // Simple SHA-256 hash for password (async)
-    async function hashPassword(password) {
-      const encoder = new TextEncoder();
-      const data = encoder.encode(password);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-      return bufferToBase64(hashBuffer);
-    }
-
-    // Registration
-    async function registerFingerprint(username, password) {
-      if (!username || !password) {
-        setLoginStatus('Please enter username and password.', 'error');
-        return;
-      }
-      username = username.trim();
-
-      // Check if already registered
-      const existing = getCredentialData();
-      if (existing && existing.username === username) {
-        setLoginStatus('Username already registered. Try logging in.', 'error');
-        return;
-      }
-
-      const challenge = generateChallenge();
-      const userId = new TextEncoder().encode(username);
-
-      const publicKey = {
-        challenge: challenge,
-        rp: { name: 'EaseSave' },
-        user: {
-          id: userId,
-          name: username,
-          displayName: username,
-        },
-        pubKeyCredParams: [
-          { alg: -7, type: 'public-key' },  // ES256
-          { alg: -257, type: 'public-key' } // RS256
-        ],
-        authenticatorSelection: {
-          // Remove 'platform' to allow PIN/security key on PCs
-          userVerification: 'required',
-          residentKey: 'required', // store credential on device
-        },
-        timeout: 60000,
-        attestation: 'none',
-      };
-
-      try {
-        const credential = await navigator.credentials.create({ publicKey });
-
-        // Hash password and store all data
-        const passwordHash = await hashPassword(password);
-        const credData = {
-          username: username,
-          credentialId: bufferToBase64(credential.id ? new TextEncoder().encode(credential.id) : credential.rawId),
-          publicKey: bufferToBase64(credential.response.getPublicKey ? credential.response.getPublicKey() : new Uint8Array(0)),
-          passwordHash: passwordHash,
-        };
-        saveCredentialData(credData);
-        setLoginStatus(`✅ Registered ${username} successfully! You can now login.`, 'success');
-      } catch (err) {
-        console.error('Registration error:', err);
-        setLoginStatus('❌ Registration failed: ' + (err.message || 'Unknown error'), 'error');
-      }
-    }
-
-    // Login with fingerprint
-    async function loginFingerprint(username) {
-      if (!username) {
-        setLoginStatus('Please enter your username.', 'error');
-        return;
-      }
-      username = username.trim();
-      const credData = getCredentialData();
-      if (!credData || credData.username !== username) {
-        setLoginStatus('❌ No registered fingerprint for this username.', 'error');
-        return;
-      }
-
-      const credentialIdBuffer = base64ToBuffer(credData.credentialId);
-      const challenge = generateChallenge();
-
-      const publicKey = {
-        challenge: challenge,
-        allowCredentials: [{
-          id: credentialIdBuffer,
-          type: 'public-key',
-        }],
+    const publicKey = {
+      challenge: challenge,
+      rp: { name: 'EaseSave' },
+      user: {
+        id: userId,
+        name: username,
+        displayName: username,
+      },
+      pubKeyCredParams: [
+        { alg: -7, type: 'public-key' },  // ES256
+        { alg: -257, type: 'public-key' } // RS256
+      ],
+      authenticatorSelection: {
+        // Let the browser choose the best authenticator (fingerprint, PIN, security key)
         userVerification: 'required',
-        timeout: 60000,
+        residentKey: 'preferred',  // works on more devices than 'required'
+      },
+      timeout: 60000,
+      attestation: 'none',
+    };
+
+    try {
+      console.log('🔐 Starting WebAuthn registration...');
+      const credential = await navigator.credentials.create({ publicKey });
+      console.log('✅ Credential created:', credential);
+
+      // Extract credential ID from rawId (ArrayBuffer)
+      const credentialId = credential.rawId; // ArrayBuffer
+      // Extract public key (if available)
+      let publicKeyBuffer = new Uint8Array(0);
+      if (credential.response && credential.response.getPublicKey) {
+        publicKeyBuffer = credential.response.getPublicKey();
+      }
+
+      // Hash password and store all data
+      const passwordHash = await hashPassword(password);
+      const credData = {
+        username: username,
+        credentialId: bufferToBase64(credentialId),
+        publicKey: bufferToBase64(publicKeyBuffer),
+        passwordHash: passwordHash,
       };
+      saveCredentialData(credData);
+      setLoginStatus(`✅ Registered ${username} successfully! You can now login.`, 'success');
+    } catch (err) {
+      console.error('❌ Registration error:', err);
+      setLoginStatus('❌ Registration failed: ' + (err.message || 'Unknown error'), 'error');
+    }
+  }
 
-      try {
-        const assertion = await navigator.credentials.get({ publicKey });
-        if (assertion && assertion.response) {
-          setLoginStatus(`✅ Login successful! Welcome ${username}.`, 'success');
-          showApp();
-        } else {
-          setLoginStatus('❌ Login failed: invalid response.', 'error');
-        }
-      } catch (err) {
-        console.error('Login error:', err);
-        setLoginStatus('❌ Login failed: ' + (err.message || 'Unknown error'), 'error');
-      }
+  // LOGIN WITH FINGERPRINT
+  async function loginFingerprint(username) {
+    if (!username) {
+      setLoginStatus('Please enter your username.', 'error');
+      return;
+    }
+    username = username.trim();
+    const credData = getCredentialData();
+    if (!credData) {
+      setLoginStatus('❌ No registered account found. Please register first.', 'error');
+      return;
+    }
+    if (credData.username !== username) {
+      setLoginStatus(`❌ No registered fingerprint for "${username}". Check your username.`, 'error');
+      return;
     }
 
-    // Login with password
-    async function loginWithPassword(username, password) {
-      if (!username || !password) {
-        setLoginStatus('Please enter username and password.', 'error');
-        return;
+    const credentialIdBuffer = base64ToBuffer(credData.credentialId);
+    const challenge = generateChallenge();
+
+    const publicKey = {
+      challenge: challenge,
+      allowCredentials: [{
+        id: credentialIdBuffer,
+        type: 'public-key',
+      }],
+      userVerification: 'required',
+      timeout: 60000,
+    };
+
+    try {
+      console.log('🔐 Starting WebAuthn login...');
+      const assertion = await navigator.credentials.get({ publicKey });
+      console.log('✅ Login assertion received:', assertion);
+      if (assertion && assertion.response) {
+        setLoginStatus(`✅ Login successful! Welcome ${username}.`, 'success');
+        showApp();
+      } else {
+        setLoginStatus('❌ Login failed: invalid response.', 'error');
       }
-      username = username.trim();
-      const credData = getCredentialData();
-      if (!credData || credData.username !== username) {
-        setLoginStatus('❌ No account found for this username.', 'error');
-        return;
-      }
-      const hashedInput = await hashPassword(password);
-      if (credData.passwordHash !== hashedInput) {
-        setLoginStatus('❌ Incorrect password.', 'error');
-        return;
-      }
-      setLoginStatus(`✅ Login successful! Welcome ${username}.`, 'success');
-      showApp();
+    } catch (err) {
+      console.error('❌ Login error:', err);
+      setLoginStatus('❌ Login failed: ' + (err.message || 'Unknown error'), 'error');
     }
+  }
 
-    // UI helpers
-    const loginScreen = document.getElementById('loginScreen');
-    const loginStatus = document.getElementById('loginStatus');
-    const loginUsername = document.getElementById('loginUsername');
-    const loginPassword = document.getElementById('loginPassword');
-    const loginRegisterBtn = document.getElementById('loginRegisterBtn');
-    const loginAuthBtn = document.getElementById('loginAuthBtn');
-    const loginPasswordBtn = document.getElementById('loginPasswordBtn');
-
-    function setLoginStatus(msg, type = 'info') {
-      loginStatus.textContent = msg;
-      loginStatus.className = 'login-status';
-      if (type === 'success') loginStatus.classList.add('success');
-      else if (type === 'error') loginStatus.classList.add('error');
-      else if (type === 'loading') loginStatus.classList.add('loading');
+  // LOGIN WITH PASSWORD
+  async function loginWithPassword(username, password) {
+    if (!username || !password) {
+      setLoginStatus('Please enter username and password.', 'error');
+      return;
     }
-
-    function showApp() {
-      loginScreen.classList.add('hidden');
-      document.getElementById('appShell').classList.add('visible');
-      if (!window._appInitialized) {
-        initApp();
-        window._appInitialized = true;
-      }
-      switchScreen('dashboard');
+    username = username.trim();
+    const credData = getCredentialData();
+    if (!credData || credData.username !== username) {
+      setLoginStatus('❌ No account found for this username.', 'error');
+      return;
     }
+    const hashedInput = await hashPassword(password);
+    if (credData.passwordHash !== hashedInput) {
+      setLoginStatus('❌ Incorrect password.', 'error');
+      return;
+    }
+    setLoginStatus(`✅ Login successful! Welcome ${username}.`, 'success');
+    showApp();
+  }
 
-    // Event listeners
-    loginRegisterBtn.addEventListener('click', () => {
-      const username = loginUsername.value.trim();
-      const password = loginPassword.value.trim();
-      registerFingerprint(username, password);
-    });
+  // UI helpers (unchanged)
+  const loginScreen = document.getElementById('loginScreen');
+  const loginStatus = document.getElementById('loginStatus');
+  const loginUsername = document.getElementById('loginUsername');
+  const loginPassword = document.getElementById('loginPassword');
+  const loginRegisterBtn = document.getElementById('loginRegisterBtn');
+  const loginAuthBtn = document.getElementById('loginAuthBtn');
+  const loginPasswordBtn = document.getElementById('loginPasswordBtn');
 
-    loginAuthBtn.addEventListener('click', () => {
-      const username = loginUsername.value.trim();
-      loginFingerprint(username);
-    });
+  function setLoginStatus(msg, type = 'info') {
+    loginStatus.textContent = msg;
+    loginStatus.className = 'login-status';
+    if (type === 'success') loginStatus.classList.add('success');
+    else if (type === 'error') loginStatus.classList.add('error');
+    else if (type === 'loading') loginStatus.classList.add('loading');
+  }
 
-    loginPasswordBtn.addEventListener('click', () => {
-      const username = loginUsername.value.trim();
-      const password = loginPassword.value.trim();
-      loginWithPassword(username, password);
-    });
+  function showApp() {
+    loginScreen.classList.add('hidden');
+    document.getElementById('appShell').classList.add('visible');
+    if (!window._appInitialized) {
+      initApp();
+      window._appInitialized = true;
+    }
+    switchScreen('dashboard');
+  }
 
-    loginUsername.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') loginPassword.focus();
-    });
-    loginPassword.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') loginRegisterBtn.click();
-    });
+  // Event listeners
+  loginRegisterBtn.addEventListener('click', () => {
+    const username = loginUsername.value.trim();
+    const password = loginPassword.value.trim();
+    registerFingerprint(username, password);
+  });
 
-    // Expose for debugging
-    window.__webauthn = { registerFingerprint, loginFingerprint, loginWithPassword, getCredentialData };
-  })();
+  loginAuthBtn.addEventListener('click', () => {
+    const username = loginUsername.value.trim();
+    loginFingerprint(username);
+  });
 
+  loginPasswordBtn.addEventListener('click', () => {
+    const username = loginUsername.value.trim();
+    const password = loginPassword.value.trim();
+    loginWithPassword(username, password);
+  });
+
+  loginUsername.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') loginPassword.focus();
+  });
+  loginPassword.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') loginRegisterBtn.click();
+  });
+
+  // Expose for debugging
+  window.__webauthn = { registerFingerprint, loginFingerprint, loginWithPassword, getCredentialData };
+})();
   // ============================================================
   // YOUR ORIGINAL APP CODE (unchanged, except init is now called after login)
   // ============================================================
