@@ -20,7 +20,6 @@
       font-family:'DM Sans',sans-serif;
       background: linear-gradient(145deg, #0a1628 0%, #0d2a1a 100%);
       color: #E6EDF3;
-      padding-bottom:88px;
       min-height:100vh;
       display:flex;
       flex-direction:column;
@@ -61,11 +60,87 @@
     ::-webkit-scrollbar-track { background: var(--bg-primary); }
     ::-webkit-scrollbar-thumb { background: var(--plum); border-radius:10px; }
 
+    /* ===== LOGIN SCREEN ===== */
+    #loginScreen {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(145deg, #0a1628 0%, #0d2a1a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    #loginScreen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .login-box {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      max-width: 380px;
+      width: 100%;
+      border: 1px solid var(--border-soft);
+      box-shadow: var(--shadow-lift);
+      text-align: center;
+    }
+    .login-box h1 {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+    }
+    .login-box .sub {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .login-box .fingerprint-icon {
+      font-size: 56px;
+      color: var(--plum);
+      margin-bottom: 16px;
+      display: block;
+    }
+    .login-box .auth-input {
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .login-box .btn-primary {
+      margin-top: 8px;
+    }
+    .login-box .btn-outline {
+      margin-top: 8px;
+    }
+    .login-status {
+      font-size: 14px;
+      margin-top: 16px;
+      min-height: 24px;
+      color: var(--text-secondary);
+    }
+    .login-status.success { color: var(--sage); }
+    .login-status.error { color: var(--soft-red); }
+    .login-status.loading { color: var(--amber); }
+
+    /* ===== APP SHELL ===== */
+    #appShell {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+      padding-bottom: 88px;
+    }
+    #appShell.visible {
+      display: flex;
+    }
+
+    /* ===== Existing styles (copied from your original) ===== */
     .screen { display:none; flex:1; padding:18px 16px 24px; animation:fadeIn 0.3s ease; }
     .screen.active { display:block; }
     @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
 
-    /* ─── Bottom Navigation ─── */
     .bottom-nav {
       position:fixed; bottom:0; left:0; right:0;
       background: rgba(10, 22, 40, 0.92);
@@ -87,7 +162,6 @@
     .nav-item.active i { color:var(--plum); transform: translateY(-1px); }
     .nav-item:hover { color:var(--text-primary); }
 
-    /* ─── FAB ─── */
     .fab {
       position:fixed; bottom:96px; right:20px;
       width:62px; height:62px; border-radius:50%;
@@ -100,7 +174,6 @@
     .fab:hover { transform:scale(1.08) rotate(8deg); box-shadow: 0 12px 30px rgba(245,166,35,0.45); }
     .fab:active { transform: scale(0.96); }
 
-    /* ─── Cards ─── */
     .card {
       background: var(--bg-card);
       backdrop-filter: blur(8px);
@@ -124,7 +197,6 @@
       letter-spacing:0.3px;
     }
 
-    /* ─── Progress Bars ─── */
     .progress-bar {
       height:8px; background:#1A2A2A; border-radius:20px; overflow:hidden;
       margin-top:8px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
@@ -137,12 +209,10 @@
     .progress-fill.amber { background: linear-gradient(90deg, var(--amber-dark), var(--amber)); }
     .progress-fill.red { background: linear-gradient(90deg, var(--soft-red-dark), var(--soft-red)); }
 
-    /* ─── Dial / Pulse ─── */
     #pulseCanvas { display:block; margin:0 auto; width:150px; height:150px; }
     .dial-label { text-align:center; margin-top:2px; font-size:14px; color:var(--text-secondary); font-weight:500; }
     .dial-value { font-family:'DM Mono',monospace; font-size:23px; font-weight:700; color:var(--text-primary); }
 
-    /* ─── Category Grid ─── */
     .category-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:14px 0; }
     .category-chip {
       display:flex; flex-direction:column; align-items:center;
@@ -164,7 +234,6 @@
     .category-chip.income.selected { border-color:var(--sage); background:rgba(91,168,122,0.15); }
     .category-chip.income.selected i { color:var(--sage); }
 
-    /* ─── Transaction Items ─── */
     .tx-item { display:flex; align-items:center; padding:12px 0; border-bottom:1px solid #1A2A2A; }
     .tx-item:last-child { border-bottom:none; }
     .tx-icon {
@@ -188,7 +257,6 @@
     .tx-actions .edit-btn:hover { color:var(--plum); }
     .tx-actions .delete-btn:hover { color:var(--soft-red); }
 
-    /* ─── Num Pad ─── */
     .num-pad { display:grid; grid-template-columns:repeat(4,1fr); gap:9px; margin-top:14px; }
     .num-pad button {
       padding:16px 0; font-size:21px; font-family:'DM Mono',monospace; font-weight:600;
@@ -200,7 +268,6 @@
     .num-pad .clear-btn:active { background:rgba(224,92,92,0.2); }
     .num-pad .submit-btn { background:linear-gradient(135deg, var(--plum), var(--plum-dark)); color:white; font-size:18px; box-shadow:0 4px 16px rgba(124,92,191,0.3); }
 
-    /* ─── Form Inputs ─── */
     .auth-input, input[type="text"], input[type="number"], input[type="date"], input[type="month"], select {
       width:100%;
       padding:13px 16px;
@@ -248,7 +315,6 @@
       text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; display:block;
     }
 
-    /* ─── Report Table ─── */
     .report-table { width:100%; border-collapse:collapse; font-size:14px; }
     .report-table th {
       text-align:left; color:var(--text-secondary); font-weight:700; text-transform:uppercase;
@@ -258,12 +324,10 @@
     .report-table .variance-positive { color:var(--sage); font-weight:700; }
     .report-table .variance-negative { color:var(--soft-red); font-weight:700; }
 
-    /* ─── Savings ─── */
     .savings-item { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #1A2A2A; font-size:14px; color:var(--text-primary); }
     .savings-item .dir-deposit { color:var(--sage); font-weight:700; }
     .savings-item .dir-withdrawal { color:var(--soft-red); font-weight:700; }
 
-    /* ─── Alerts ─── */
     .alert-banner {
       background:rgba(245,166,35,0.08); border-left:4px solid var(--amber);
       padding:14px 16px; border-radius:14px; margin-bottom:12px; font-size:13.5px;
@@ -273,7 +337,6 @@
     .alert-banner.danger { background:rgba(224,92,92,0.08); border-left-color:var(--soft-red); }
     .alert-banner.success { background:rgba(91,168,122,0.08); border-left-color:var(--sage); }
 
-    /* ─── Utilities ─── */
     .flex-row { display:flex; justify-content:space-between; align-items:center; }
     .mt-8 { margin-top:8px; }
     .mb-8 { margin-bottom:8px; }
@@ -281,7 +344,6 @@
     .text-center { text-align:center; }
     .w-full { width:100%; }
 
-    /* ─── Buttons ─── */
     .btn-primary {
       background:linear-gradient(135deg, var(--plum), var(--plum-dark));
       color:white; border:none; padding:15px 20px; border-radius:16px;
@@ -301,7 +363,6 @@
     .dashboard-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
     .dashboard-header h1 { font-size:25px; font-weight:800; color:var(--text-primary); letter-spacing:-0.3px; }
 
-    /* ─── Date Display ─── */
     .date-display {
       background:linear-gradient(135deg, #0D1A2B, #1A2A2A);
       border:1px solid var(--border-soft);
@@ -326,7 +387,6 @@
     .date-display .date-sub { font-size:13.5px; opacity:0.6; margin-top:2px; }
     .date-display .date-day { font-size:38px; font-weight:800; opacity:0.5; font-family:'DM Mono',monospace; }
 
-    /* ─── Stipend & Budget Inputs ─── */
     .stipend-input-group { display:flex; gap:8px; align-items:center; margin-top:8px; }
     .stipend-input-group input {
       flex:1; padding:11px 14px; border-radius:12px; border:1.5px solid var(--border-soft);
@@ -341,7 +401,6 @@
     }
     .stipend-input-group .save-stipend-btn:active { background:#3d7a55; transform:scale(0.96); }
 
-    /* ─── Calendar ─── */
     .cal-day {
       padding:10px 0; text-align:center; border-radius:13px; cursor:pointer;
       font-weight:500; color:var(--text-secondary); border:2px solid transparent;
@@ -354,13 +413,28 @@
     .stipend-status.sage { color:var(--sage); font-weight:700; }
     .stipend-status.amber { color:var(--amber); font-weight:700; }
 
-    /* ─── Scrollable containers ─── */
     .scrollable { max-height:400px; overflow-y:auto; padding-right:4px; }
     .scrollable::-webkit-scrollbar { width:3px; }
     .scrollable::-webkit-scrollbar-thumb { background:var(--plum); border-radius:10px; }
   </style>
 </head>
 <body>
+
+<!-- ==================== LOGIN SCREEN ==================== -->
+<div id="loginScreen">
+  <div class="login-box">
+    <span class="fingerprint-icon"><i class="fas fa-fingerprint"></i></span>
+    <h1>EaseSave</h1>
+    <p class="sub">Secure your finances with fingerprint</p>
+
+    <input type="text" id="loginUsername" class="auth-input" placeholder="Username (e.g. john)" autocomplete="username" />
+    
+    <button id="loginRegisterBtn" class="btn-primary">Register Fingerprint</button>
+    <button id="loginAuthBtn" class="btn-outline">Login with Fingerprint</button>
+
+    <div id="loginStatus" class="login-status">Enter username, then register or login.</div>
+  </div>
+</div>
 
 <!-- ==================== APP SHELL ==================== -->
 <div id="appShell">
@@ -369,6 +443,7 @@
   <div id="screen-dashboard" class="screen active">
     <div class="dashboard-header">
       <h1>📊 EaseSave</h1>
+      <button id="logoutBtn" style="background:transparent; border:none; color:var(--text-secondary); font-size:20px; cursor:pointer;" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
     </div>
     <div id="alertContainer"></div>
 
@@ -541,6 +616,204 @@
 
 <!-- ==================== JAVASCRIPT ==================== -->
 <script>
+  // -------------------- FINGERPRINT AUTH (WebAuthn) --------------------
+  (function() {
+    // Store credential info in localStorage
+    const STORAGE_KEY = 'easesave_webauthn';
+
+    function getCredentialData() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY));
+      } catch { return null; }
+    }
+
+    function saveCredentialData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    // Helper: Convert ArrayBuffer to base64
+    function bufferToBase64(buffer) {
+      return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+    }
+
+    // Helper: Convert base64 to ArrayBuffer
+    function base64ToBuffer(base64) {
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes.buffer;
+    }
+
+    // Generate a random challenge (32 bytes)
+    function generateChallenge() {
+      const bytes = new Uint8Array(32);
+      window.crypto.getRandomValues(bytes);
+      return bytes;
+    }
+
+    // Register a new credential
+    async function registerFingerprint(username) {
+      if (!username || username.trim() === '') {
+        setLoginStatus('Please enter a username.', 'error');
+        return;
+      }
+      username = username.trim();
+
+      // Check if already registered
+      const existing = getCredentialData();
+      if (existing && existing.username === username) {
+        setLoginStatus('Username already registered. Try logging in.', 'error');
+        return;
+      }
+
+      const challenge = generateChallenge();
+      const userId = new TextEncoder().encode(username);
+
+      const publicKey = {
+        challenge: challenge,
+        rp: { name: 'EaseSave' },
+        user: {
+          id: userId,
+          name: username,
+          displayName: username,
+        },
+        pubKeyCredParams: [
+          { alg: -7, type: 'public-key' },  // ES256
+          { alg: -257, type: 'public-key' } // RS256
+        ],
+        authenticatorSelection: {
+          authenticatorAttachment: 'platform', // force built-in (fingerprint)
+          userVerification: 'required',
+          residentKey: 'preferred',
+        },
+        timeout: 60000,
+        attestation: 'none',
+      };
+
+      try {
+        const credential = await navigator.credentials.create({ publicKey });
+
+        // Store credential data
+        const credData = {
+          username: username,
+          credentialId: bufferToBase64(credential.id ? new TextEncoder().encode(credential.id) : credential.rawId),
+          publicKey: bufferToBase64(credential.response.getPublicKey ? credential.response.getPublicKey() : new Uint8Array(0)),
+          // We also store a static challenge for login (for simplicity, we'll use a fixed challenge).
+          // In real app, you'd generate a new challenge per login.
+        };
+        saveCredentialData(credData);
+        setLoginStatus(`✅ Registered ${username} successfully! You can now login.`, 'success');
+        // Auto-login after registration?
+        // We'll let user click Login button.
+      } catch (err) {
+        console.error('Registration error:', err);
+        setLoginStatus('❌ Registration failed: ' + (err.message || 'Unknown error'), 'error');
+      }
+    }
+
+    // Login with fingerprint
+    async function loginFingerprint(username) {
+      if (!username || username.trim() === '') {
+        setLoginStatus('Please enter your username.', 'error');
+        return;
+      }
+      username = username.trim();
+
+      const credData = getCredentialData();
+      if (!credData || credData.username !== username) {
+        setLoginStatus('❌ No registered fingerprint for this username.', 'error');
+        return;
+      }
+
+      // Reconstruct credential ID as ArrayBuffer
+      const credentialIdBuffer = base64ToBuffer(credData.credentialId);
+      const challenge = generateChallenge();
+
+      const publicKey = {
+        challenge: challenge,
+        allowCredentials: [{
+          id: credentialIdBuffer,
+          type: 'public-key',
+        }],
+        userVerification: 'required',
+        timeout: 60000,
+      };
+
+      try {
+        const assertion = await navigator.credentials.get({ publicKey });
+        // For a real app, you'd verify the signature on server.
+        // For this demo, we just check if we got a valid assertion.
+        if (assertion && assertion.response) {
+          setLoginStatus(`✅ Login successful! Welcome ${username}.`, 'success');
+          // Hide login, show app
+          showApp();
+        } else {
+          setLoginStatus('❌ Login failed: invalid response.', 'error');
+        }
+      } catch (err) {
+        console.error('Login error:', err);
+        setLoginStatus('❌ Login failed: ' + (err.message || 'Unknown error'), 'error');
+      }
+    }
+
+    // UI helpers for login screen
+    const loginScreen = document.getElementById('loginScreen');
+    const loginStatus = document.getElementById('loginStatus');
+    const loginUsername = document.getElementById('loginUsername');
+    const loginRegisterBtn = document.getElementById('loginRegisterBtn');
+    const loginAuthBtn = document.getElementById('loginAuthBtn');
+
+    function setLoginStatus(msg, type = 'info') {
+      loginStatus.textContent = msg;
+      loginStatus.className = 'login-status';
+      if (type === 'success') loginStatus.classList.add('success');
+      else if (type === 'error') loginStatus.classList.add('error');
+      else if (type === 'loading') loginStatus.classList.add('loading');
+    }
+
+    // Show app and hide login
+    function showApp() {
+      loginScreen.classList.add('hidden');
+      document.getElementById('appShell').classList.add('visible');
+      // Initialize app if not already done
+      if (!window._appInitialized) {
+        initApp();
+        window._appInitialized = true;
+      }
+      // Switch to dashboard
+      switchScreen('dashboard');
+    }
+
+    // Check if user already logged in? We'll just show login always.
+
+    // Event listeners
+    loginRegisterBtn.addEventListener('click', () => {
+      const username = loginUsername.value.trim();
+      registerFingerprint(username);
+    });
+
+    loginAuthBtn.addEventListener('click', () => {
+      const username = loginUsername.value.trim();
+      loginFingerprint(username);
+    });
+
+    // Allow Enter key on username field to trigger login
+    loginUsername.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        loginAuthBtn.click();
+      }
+    });
+
+    // Expose functions globally for debugging
+    window.__webauthn = { registerFingerprint, loginFingerprint, getCredentialData };
+  })();
+
+  // ============================================================
+  // YOUR ORIGINAL APP CODE (with minor adjustments)
+  // ============================================================
+
   // -------------------- STATE --------------------
   let allTransactions = [];
   let allSavings = [];
@@ -1506,6 +1779,18 @@
     });
 
     setupCalendarNav();
+
+    // Logout button
+    $('#logoutBtn').addEventListener('click', () => {
+      if (confirm('Logout?')) {
+        document.getElementById('appShell').classList.remove('visible');
+        document.getElementById('loginScreen').classList.remove('hidden');
+        // Reset login status
+        document.getElementById('loginStatus').textContent = 'Enter username, then register or login.';
+        document.getElementById('loginStatus').className = 'login-status';
+        document.getElementById('loginUsername').value = '';
+      }
+    });
   }
 
   function switchScreen(screenId) {
@@ -1521,7 +1806,7 @@
     if (screenId === 'calendar') updateCalendar();
   }
 
-  // -------------------- INIT --------------------
+  // -------------------- INIT (called after login) --------------------
   function initApp() {
     loadLocalData();
     if (allTransactions.length === 0 && allSavings.length === 0) {
@@ -1546,25 +1831,25 @@
     updateCalendar();
     updateBudgetUI();
     checkAlerts();
+
+    // Expose for debugging
+    window.__easesave = {
+      allTransactions,
+      allSavings,
+      monthlyStipend,
+      monthlyBudget,
+      updateDashboard,
+      updateTransactions,
+      updateReport,
+      updateSavingsUI,
+      updateCalendar,
+      updateStipendUI,
+      updateBudgetUI,
+    };
   }
 
-  document.addEventListener('DOMContentLoaded', initApp);
-
-  window.__easesave = {
-    allTransactions,
-    allSavings,
-    monthlyStipend,
-    monthlyBudget,
-    updateDashboard,
-    updateTransactions,
-    updateReport,
-    updateSavingsUI,
-    updateCalendar,
-    updateStipendUI,
-    updateBudgetUI,
-  };
-
-  console.log('EaseSave loaded with dark blue/green gradient theme and budget setting.');
+  // The app will be initialized when user logs in.
+  console.log('EaseSave loaded with fingerprint login.');
 </script>
 </body>
 </html>
